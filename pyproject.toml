@@ -1,0 +1,35 @@
+[build-system]
+requires = ["poetry-core>=1.0.2", "poetry-dynamic-versioning"]
+build-backend = "poetry.core.masonry.api"
+
+[tool.poetry]
+name = "pytest-accept"
+version = "0"
+description = "A pytest-plugin for updating doctest outputs"
+authors = ["max-sixty"]
+
+[tool.poetry-dynamic-versioning]
+enable = true
+# Define a pattern that allows `int` and `int.int` as version numbers
+pattern = 'v?(?P<base>[\d\.]+)'
+format = "{base}+{distance}.{commit}"
+
+[tool.poetry.plugins."pytest11"]
+accept = "pytest_accept"
+
+[tool.poetry.dependencies]
+python = ">=3.7, <3.10"
+pytest = "^6"
+
+[tool.poetry.dev-dependencies]
+# Keep versions of these four up to date with .pre-commit-config.yaml
+black = "21.5b1"
+flake8 = "3.9.2"
+isort = "5.8.0"
+mypy = "0.812"
+
+[tool.isort]
+profile = "black"
+skip_gitignore = true
+default_section = "THIRDPARTY"
+known_first_party = ["pytest-accept"]
