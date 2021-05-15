@@ -1,3 +1,4 @@
+from warnings import warn
 from itertools import zip_longest
 from pathlib import Path
 import textwrap
@@ -6,7 +7,7 @@ from collections import defaultdict
 from typing import Dict, List
 
 import pytest
-from _pytest.doctest import DoctestItem
+from _pytest.doctest import DoctestItem, MultipleDoctestFailures
 from doctest import DocTestFailure
 
 logger = logging.getLogger(__name__)
@@ -30,10 +31,22 @@ def pytest_runtest_makereport(item, call):
     if not isinstance(item, DoctestItem) or not call.excinfo:
         return
 
-    for failure in call.excinfo.value.failures:
-        # Don't include tests that fail because of an error setting the test.
-        if isinstance(failure, DocTestFailure):
-            failed_doctests[Path(failure.test.filename)].append(failure)
+    if isinstance(call.excinfo.value, DocTestFailure):
+        failed_doctests[Path(call.excinfo.value.test.filename)].append(
+            call.excinfo.value
+        )
+
+    elif isinstance(call.excinfo.value, MultipleDoctestFailures):
+        for failure in call.excinfo.value.failures:
+            # Don't include tests that fail because of an error setting the test.
+            if isinstance(failure, DocTestFailure):
+                failed_doctests[Path(failure.test.filename)].append(failure)
+
+    else:
+        warn.warning(
+            RuntimeWarning,
+            f"excinfo is type {call.excinfo.value} which isn't recognized.",
+        )
 
     return outcome.get_result()
 
