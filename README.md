@@ -10,7 +10,7 @@ outputs in version control.
 
 ## What it does
 
-Given a file like [**`test_add.py`**](pytest_accept/tests/test_add.py)
+Given a file like [**`add.py`**](examples/add.py)
 containing an incorrect output:
 
 ```python
@@ -32,14 +32,14 @@ Running doctests using pytest and passing `--accept` replaces the existing
 incorrect values with correct values:
 
 ```sh
-pytest --doctest-modules --accept
+pytest --doctest-modules examples/add.py --accept
 ```
 
 ```diff
-diff --git a/pytest_accept/tests/test_add.py b/pytest_accept/tests/test_add.py
+diff --git a/examples/add.py b/examples/add.py
 index 10a71fd..c2c945f 100644
---- a/pytest_accept/tests/test_add.py
-+++ b/pytest_accept/tests/test_add.py
+--- a/examples/add.py
++++ b/examples/add.py
 @@ -3,10 +3,10 @@ def add(x, y):
      Adds two values.
  
@@ -53,6 +53,7 @@ index 10a71fd..c2c945f 100644
      """
  
      return x + y
+
 ```
 
 ## Installation
@@ -63,12 +64,12 @@ pip install pytest-accept
 
 ## Jesse, what the?
 
-This style of tests is fairly well-developed in some languages, although still
+This style of testing is fairly well-developed in some languages, although still
 doesn't receive the attention I think it deserves, and historically hasn't had
 great support in python.
 
-It changes testing from an annoyance to automating the check you probably do
-anyway — run the code and see if the output looks reasonable.
+It changes testing from an annoyance, to an automatic way of running the check
+you probably do anyway — run the code and see if the output looks reasonable.
 
 Confusingly, it's referred to "Snapshot testing" or "Regression testing" or
 "Expect testing". The best explanation I've seen on this testing style is from
