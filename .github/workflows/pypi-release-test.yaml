@@ -11,7 +11,7 @@ jobs:
       - uses: abatilo/actions-poetry@v2.0.0
         with:
           poetry-version: 1.1.6
-      - run: pip install poetry-dynamic-versioning
+      - run: pip install poetry-dynamic-versioning markupsafe
       - run: poetry config repositories.test-pypi https://test.pypi.org/legacy/
       - run: poetry publish --build -r test-pypi
       # Can't use this because of poetry-dynamic-versioning
