@@ -63,6 +63,11 @@ def pytest_addoption(parser):
     )
 
 
+def pytest_configure(config):
+    """Sets doctests to continue after first failure"""
+    config.option.doctest_continue_on_failure = True
+
+
 def pytest_sessionfinish(session, exitstatus):
 
     passed_accept = session.config.getoption("--accept")
