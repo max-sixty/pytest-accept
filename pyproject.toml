@@ -4,13 +4,13 @@ build-backend = "poetry.core.masonry.api"
 
 [tool.poetry]
 name = "pytest-accept"
+# Defined by poetry-dynamic-versioning
 version = "0"
 description = "A pytest-plugin for updating doctest outputs"
 authors = ["max-sixty"]
 
 [tool.poetry-dynamic-versioning]
 enable = true
-# Define a pattern that allows `int` and `int.int` as version numbers
 pattern = 'v?(?P<base>[\d\.]+)'
 format = "{base}+{distance}.{commit}"
 
