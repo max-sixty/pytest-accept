@@ -12,7 +12,12 @@ authors = ["max-sixty"]
 [tool.poetry-dynamic-versioning]
 enable = true
 pattern = 'v?(?P<base>[\d\.]+)'
-format = "{base}+{distance}.{commit}"
+# PyPI doesn't like commits being in the version
+# Copied from https://github.com/mtkennerly/poetry-dynamic-versioning
+# format-jinja = "{% if distance == 0 %}{{ base }}{% else %}{{ base }}+{{ distance }}.{{ commit }}{% endif %}"
+format-jinja = "{% if distance == 0 %}{{ base }}{% else %}{{ base }}.dev{{ distance }}{% endif %}"
+
+# format = "{base}.{distance}"
 
 [tool.poetry.plugins."pytest11"]
 accept = "pytest_accept"
@@ -22,7 +27,6 @@ python = ">=3.7, <3.10"
 pytest = "^6"
 
 [tool.poetry.dev-dependencies]
-poetry-dynamic-versioning = "^0.12.6"
 astor = "^0.8.1"
 # Keep versions of these four up to date with .pre-commit-config.yaml
 black = "21.5b1"
