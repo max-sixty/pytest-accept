@@ -12,7 +12,11 @@ authors = ["max-sixty"]
 [tool.poetry-dynamic-versioning]
 enable = true
 pattern = 'v?(?P<base>[\d\.]+)'
-format = "{base}.{distance}.{commit}"
+# PyPI doesn't like commits being in the version
+# Copied from https://github.com/mtkennerly/poetry-dynamic-versioning
+format-jinja = "{% if distance == 0 %}{{ base }}{% else %}{{ base }}+{{ distance }}.{{ commit }}{% endif %}"
+
+# format = "{base}.{distance}"
 
 [tool.poetry.plugins."pytest11"]
 accept = "pytest_accept"
