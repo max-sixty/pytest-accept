@@ -1,7 +1,7 @@
-name: PyPI release
+name: Python package
 on:
   push:
-    tags:
+    branches:
       - "*"
 jobs:
   build:
@@ -11,4 +11,6 @@ jobs:
       - name: Build and publish to pypi
         uses: JRubics/poetry-publish@v1.6
         with:
-          pypi_token: ${{ secrets.PYPI_TOKEN }}
+          pypi_token: ${{ secrets.PYPI_TEST_TOKEN }}
+          repository_name: "testpypi"
+          repository_url: "https://test.pypi.org/legacy/"
