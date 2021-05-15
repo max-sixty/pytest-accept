@@ -1,0 +1,116 @@
+# From https://github.com/pydata/xarray/blob/8b028e3f6a2a06b9ae4b8073f3b0f0151b6bebc3/.github/workflows/pypi-release.yaml
+
+name: Build and Upload xarray to PyPI
+on:
+  release:
+    types:
+      - published
+  push:
+    tags:
+      - "v*"
+
+jobs:
+  ci:
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: [3.7, 3.8, 3.9]
+        poetry-version: [1.1.6]
+        os: [ubuntu-18.04, macos-latest, windows-latest]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/setup-python@v2
+        with:
+          python-version: ${{ matrix.python-version }}
+      - uses: abatilo/actions-poetry@v2.0.0
+        with:
+          poetry-version: ${{ matrix.poetry-version }}
+
+  build-artifacts:
+    runs-on: ubuntu-latest
+    if: github.repository == 'max-sixty/pytest-accept'
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-python@v2
+        name: Install Python
+        with:
+          python-version: 3.8
+
+      - name: Install dependencies
+        run: |
+          curl -sSL https://raw.githubusercontent.com/python-poetry/poetry/master/get-poetry.py | python -
+          python -m pip install --upgrade pip
+          python -m pip install setuptools wheel poetry-dynamic-versioning
+
+      - name: Build tarball and wheels
+        run: |
+          git clean -xdf
+          git restore -SW .
+          python -m build --sdist --wheel .
+
+      - name: Check built artifacts
+        run: |
+          python -m twine check dist/*
+          pwd
+          if [ -f dist/xarray-0.0.0.tar.gz ]; then
+            echo "❌ INVALID VERSION NUMBER"
+            exit 1
+          else
+            echo "✅ Looks good"
+          fi
+      - uses: actions/upload-artifact@v2
+        with:
+          name: releases
+          path: dist
+
+  test-built-dist:
+    needs: build-artifacts
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/setup-python@v2
+        name: Install Python
+        with:
+          python-version: 3.8
+      - uses: actions/download-artifact@v2
+        with:
+          name: releases
+          path: dist
+      - name: List contents of built dist
+        run: |
+          ls -ltrh
+          ls -ltrh dist
+      - name: Publish package to TestPyPI
+        if: github.event_name == 'push'
+        uses: pypa/gh-action-pypi-publish@v1.4.2
+        with:
+          user: __token__
+          password: ${{ secrets.TESTPYPI_TOKEN }}
+          repository_url: https://test.pypi.org/legacy/
+          verbose: true
+
+      - name: Check uploaded package
+        if: github.event_name == 'push'
+        run: |
+          sleep 3
+          python -m pip install --upgrade pip
+          python -m pip install --extra-index-url https://test.pypi.org/simple --upgrade xarray
+          python -m xarray.util.print_versions
+
+  upload-to-pypi:
+    needs: test-built-dist
+    if: github.event_name == 'release'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/download-artifact@v2
+        with:
+          name: releases
+          path: dist
+      - name: Publish package to PyPI
+        uses: pypa/gh-action-pypi-publish@v1.4.2
+        with:
+          user: __token__
+          password: ${{ secrets.PYPI_TOKEN }}
+          verbose: true
