@@ -8,7 +8,20 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
-      - name: Build and publish to pypi
-        uses: JRubics/poetry-publish@v1.6
         with:
-          pypi_token: ${{ secrets.PYPI_TOKEN }}
+          fetch-depth: 0
+      - uses: actions/setup-python@v2
+        with:
+          python-version: 3.8
+      - uses: abatilo/actions-poetry@v2.0.0
+        with:
+          poetry-version: 1.1.6
+      - run: pip install poetry-dynamic-versioning
+      - run: poetry config repositories.pypi https://pypi.org/legacy/
+      - run: poetry config pypi-token.pypi ${{ secrets.PYPI_TOKEN }}
+      - run: poetry publish --build -r pypi
+      # Can't use this because of poetry-dynamic-versioning
+      # - name: Build and publish to pypi
+      #   uses: JRubics/poetry-publish@v1.6
+      #   with:
+      #     pypi_token: ${{ secrets.PYPI_TOKEN }}

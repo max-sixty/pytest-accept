@@ -2,17 +2,23 @@ name: Test-PyPI release
 on:
   push:
     branches:
-      - "*"
+      - main
 jobs:
   build:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-python@v2
+        with:
+          python-version: 3.8
       - uses: abatilo/actions-poetry@v2.0.0
         with:
           poetry-version: 1.1.6
-      - run: pip install poetry-dynamic-versioning markupsafe
+      - run: pip install poetry-dynamic-versioning
       - run: poetry config repositories.test-pypi https://test.pypi.org/legacy/
+      - run: poetry config pypi-token.test-pypi ${{ secrets.PYPI_TEST_TOKEN }}
       - run: poetry publish --build -r test-pypi
       # Can't use this because of poetry-dynamic-versioning
       # - name: Build and publish to pypi
