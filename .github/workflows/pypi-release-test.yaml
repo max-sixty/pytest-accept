@@ -16,7 +16,7 @@ jobs:
           poetry-version: 1.1.6
       - run: pip install poetry-dynamic-versioning
       - run: poetry config repositories.test-pypi https://test.pypi.org/legacy/
-      - run: poetry config pypi-token.test-pypi ${{ secrets.TEST_PYPI_TOKEN }}
+      - run: poetry config pypi-token.test-pypi ${{ secrets.PYPI_TEST_TOKEN }}
       - run: poetry publish --build -r test-pypi
       # Can't use this because of poetry-dynamic-versioning
       # - name: Build and publish to pypi
