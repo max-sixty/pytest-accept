@@ -2,7 +2,8 @@ name: Test-PyPI release
 on:
   push:
     branches:
-      - "*"
+      - main
+      - publish
 jobs:
   build:
     runs-on: ubuntu-latest
