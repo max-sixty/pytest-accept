@@ -83,6 +83,8 @@ def pytest_configure(config):
 
 def pytest_sessionfinish(session, exitstatus):
 
+    assert session.config.option.doctest_continue_on_failure
+
     passed_accept = session.config.getoption("--accept")
     passed_accept_copy = session.config.getoption("--accept-copy")
     if not (passed_accept or passed_accept_copy):
