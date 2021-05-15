@@ -12,7 +12,7 @@ authors = ["max-sixty"]
 [tool.poetry-dynamic-versioning]
 enable = true
 pattern = 'v?(?P<base>[\d\.]+)'
-format = "{base}+{distance}.{commit}"
+format = "{base}.{distance}.{commit}"
 
 [tool.poetry.plugins."pytest11"]
 accept = "pytest_accept"
