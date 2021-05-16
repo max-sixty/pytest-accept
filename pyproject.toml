@@ -39,3 +39,8 @@ profile = "black"
 skip_gitignore = true
 default_section = "THIRDPARTY"
 known_first_party = ["pytest-accept"]
+
+[tool.pytest.ini_options]
+pytester_example_dir = "examples"
+addopts = "--doctest-modules"
+doctest_optionflags = "NORMALIZE_WHITESPACE IGNORE_EXCEPTION_DETAIL ELLIPSIS"

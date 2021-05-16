@@ -3,10 +3,10 @@ def add(x, y):
     Adds two values.
 
     >>> add(1, 1)
-    2
+    3
 
     >>> add("ab", "c")
-    'abc'
+    'cab'
     """
 
     return x + y
