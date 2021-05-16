@@ -1,17 +1,16 @@
 # pytest-accept
 
-pytest-accept copies the results of executing doctest inputs into doctest
-outputs.
+pytest-accept copies the results from running doctests into their outputs.
 
 It's designed for two groups of people:
 
-- People who are happy with their approach to testing, but work with doctests
-  and don't enjoy manually copying and pasting results from the command line
-  into their doctests. pytest-accept will do the copying & pasting for you.
-- People who find writing tests a bit annoying, and prefer to develop by
-  "running the code and see whether it works". The approach to testing that this
-  library allows aims to transform testing into a enjoyable part of your
-  existing development loop.
+- People who work with doctests and don't enjoy manually copying and pasting
+  results from the command line into their doctests' outputs. pytest-accept will
+  do the copying & pasting for you.
+- People who generally find writing tests a bit annoying, and prefer to develop
+  by "running the code and see whether it works". This library aims to allow an
+  approach to testing that transform it into a enjoyable part of your existing
+  development loop.
 
 It's uncoupled from the files it works with — the library can be used with
 existing doctests, and the doctests it creates are no different to normal
@@ -37,7 +36,7 @@ def add(x, y):
     return x + y
 ```
 
-Running doctests using pytest and passing `--accept` replaces the existing
+...running doctests using pytest and passing `--accept` replaces the existing
 incorrect values with correct values:
 
 ```sh
