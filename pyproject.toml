@@ -44,3 +44,6 @@ known_first_party = ["pytest-accept"]
 pytester_example_dir = "examples"
 addopts = "--doctest-modules"
 doctest_optionflags = "NORMALIZE_WHITESPACE IGNORE_EXCEPTION_DETAIL ELLIPSIS"
+testpaths = [
+    "pytest_accept"
+]
