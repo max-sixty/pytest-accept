@@ -9,6 +9,7 @@ def add_example():
     Setup:
 
     >>> pytester = getfixture("pytester")
+    >>> pytest.mark.skipif(sys.platform == "win32", reason="Paths differ on windows")
     >>> pytester.copy_example("add.py")
     PosixPath('.../pytest_accept.tests.test_doctest.add_example0/add.py')
 
