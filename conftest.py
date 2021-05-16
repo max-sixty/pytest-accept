@@ -7,3 +7,6 @@ pytest_plugins = ["pytester"]
 def add_standard_imports(doctest_namespace):
 
     doctest_namespace["pytest"] = pytest
+    import sys
+
+    doctest_namespace["sys"] = sys
