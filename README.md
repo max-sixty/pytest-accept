@@ -122,9 +122,9 @@ Not really! Some things to watch out for:
   print as failures.
   - TODO: A future version could print something about them being fixed.
 - Doctests are imperfect:
+  - It can't handle indents, and probably other things. (We do handle blank
+    lines though).
   - The syntax for `.*` is an ellipsis `...`, which is also the syntax for
     continuing a code line.
   - The syntax for all the directives is arguably less than aesthetically
     pleasing.
-  - Currently we don't handle blank lines in our output, so subsequent text will
-    be treated as documentation. (TODO: fix)

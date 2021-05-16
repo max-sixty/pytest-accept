@@ -81,6 +81,13 @@ def pytest_configure(config):
     config.option.doctest_continue_on_failure = True
 
 
+def _to_doctest_format(output: str) -> str:
+    lines = output.splitlines()
+    blankline_sentinel = "<BLANKLINE>"
+    transformed_lines = [line if line else blankline_sentinel for line in lines]
+    return "\n".join(transformed_lines)
+
+
 def pytest_sessionfinish(session, exitstatus):
 
     assert session.config.option.doctest_continue_on_failure
@@ -108,11 +115,12 @@ def pytest_sessionfinish(session, exitstatus):
 
             for current, next in zip_longest(failures, failures[1:]):
 
-                snapshot_result = current.got
+                snapshot_result = _to_doctest_format(current.got)
                 indented = textwrap.indent(
                     snapshot_result, prefix=" " * current.example.indent
                 )
-                file.write(indented)
+                for line in indented.splitlines():
+                    print(line, file=file)
 
                 current_finish_line = _snapshot_start_line(current) + len(
                     current.example.want.splitlines()
