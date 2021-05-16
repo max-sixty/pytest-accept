@@ -1,14 +1,13 @@
-from warnings import warn
+import logging
+import textwrap
+from collections import defaultdict
+from doctest import DocTestFailure
 from itertools import zip_longest
 from pathlib import Path
-import textwrap
-import logging
-from collections import defaultdict
 from typing import Dict, List
 
 import pytest
 from _pytest.doctest import DoctestItem, MultipleDoctestFailures
-from doctest import DocTestFailure
 
 logger = logging.getLogger(__name__)
 
@@ -41,12 +40,6 @@ def pytest_runtest_makereport(item, call):
             # Don't include tests that fail because of an error setting the test.
             if isinstance(failure, DocTestFailure):
                 failed_doctests[Path(failure.test.filename)].append(failure)
-
-    else:
-        warn.warning(
-            RuntimeWarning,
-            f"excinfo is type {call.excinfo.value} which isn't recognized.",
-        )
 
     return outcome.get_result()
 

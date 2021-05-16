@@ -10,8 +10,12 @@ It's designed for two groups of people:
   into their doctests. pytest-accept will do the copying & pasting for you.
 - People who find writing tests a bit annoying, and prefer to develop by
   "running the code and see whether it works". The approach to testing that this
-  library allows will transform testing into a enjoyable part of your existing
-  development loop.
+  library allows aims to transform testing into a enjoyable part of your
+  existing development loop.
+
+It's uncoupled from the files it works with — the library can be used with
+existing doctests, and the doctests it creates are no different to normal
+doctests.
 
 ## Jesse, what the?
 
@@ -123,8 +127,13 @@ Not really! Some things to watch out for:
   - TODO: A future version could print something about them being fixed.
 - Doctests are imperfect:
   - It can't handle indents, and probably other things. (We do handle blank
-    lines though).
+    lines though, and TODO: check whether the output we paste is valid doctest
+    output).
   - The syntax for `.*` is an ellipsis `...`, which is also the syntax for
     continuing a code line.
   - The syntax for all the directives is arguably less than aesthetically
     pleasing.
+  - It reports line numbers incorrectly in some cases — two docstring lines
+    separated with continuation character `\` is counted as one, meaning this
+    library will not have access to the correct line number for doctest inputs
+    and outputs.
