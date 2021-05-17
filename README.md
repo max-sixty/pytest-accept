@@ -1,19 +1,20 @@
 # pytest-accept
 
-pytest-accept writes doctests' documented outputs by observing their generated outputs.
+pytest-accept writes doctests' documented outputs by observing their generated
+outputs.
 
 It's designed for a couple of use cases:
 
 - People who work with doctests and don't enjoy manually copying and pasting
-  generated outputs from the pytest error log into their doctests' outputs. 
-  pytest-accept does the copying & pasting for you.
+  generated outputs from the pytest error log into their doctests' documented
+  outputs. pytest-accept does the copying & pasting for you.
 - People who generally find writing tests a bit annoying, and prefer to develop
   by "running the code and seeing whether it works". This library aims to allow
   testing to become a joyful part of that development loop.
 
-pytest-accept is decoupled from the files it works with — the library can be used with
-existing doctests, and the doctests it creates are no different to normal
-doctests.
+pytest-accept is decoupled from the files it works with — the library can be
+used with existing doctests, and the doctests it edits are no different to
+normal doctests.
 
 ## Jesse, what the?
 
@@ -68,8 +69,8 @@ doesn't receive the attention I think it deserves, and historically hasn't had
 good support in python.
 
 Confusingly, it's referred to "snapshot testing" or "regression testing" or
-"expect testing" or "literate testing". The best explanation I've seen on this
-testing style is from Ron Minsky in a [Jane Street
+"expect testing" or "literate testing" or "acceptance testing". The best
+explanation I've seen on this testing style is from Ron Minsky in a [Jane Street
 Blogpost](https://blog.janestreet.com/testing-with-expectations/).
 
 ## Installation
@@ -97,7 +98,7 @@ Some alternatives:
   file snapshot testing (i.e. not inline).
 - We could write a specific function / fixture, like `accept(result, "abc")`,
   similar to frameworks like rust's excellent
-  [insta](https://github.com/mitsuhiko/insta) (which I developed some features 
+  [insta](https://github.com/mitsuhiko/insta) (which I developed some features
   for), or [ocaml's ppx_expect](https://github.com/janestreet/ppx_expect).
   - But this has the disadvantage of coupling the test to the plugin: it's not
     possible to run tests independently of the plugin, or use the plugin on
@@ -115,9 +116,10 @@ Not really! Some things to watch out for:
   useful changes to the file between the start and and the end of a test — it'll
   overwrite them. Passing `--accept-copy` will cause the plugin to instead
   create a file named `{file}.py.new`.
-  - TODO: Should we disable the plugin on `--pdb` as one way of long-running tests?
-  - It will overwrite the existing values, though these aren't generally useful — they're
-    designed to match the results of the code.
+  - TODO: Should we disable the plugin on `--pdb` as one way of long-running
+    tests?
+  - It will overwrite the existing values, though these aren't generally useful
+    — they're designed to match the results of the code.
 - This is early, and there are probably some small bugs. Let me know and I'll
   attempt to fix them.
 - It currently doesn't affect the printing of test results; the doctests will
