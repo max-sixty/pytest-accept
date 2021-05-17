@@ -1,16 +1,16 @@
 # pytest-accept
 
-pytest-accept copies the results from running doctests into their outputs.
+pytest-accept copies the generated output of doctests into their documented
+outputs.
 
 It's designed for two groups of people:
 
 - People who work with doctests and don't enjoy manually copying and pasting
-  results from the command line into their doctests' outputs. pytest-accept will
+  generated outputs from the command line into their doctests' outputs. pytest-accept will
   do the copying & pasting for you.
 - People who generally find writing tests a bit annoying, and prefer to develop
-  by "running the code and see whether it works". This library aims to allow an
-  approach to testing that transform it into a enjoyable part of your existing
-  development loop.
+  by "running the code and see whether it works". This library aims to allow
+  testing to become a enjoyable part of that development loop.
 
 It's uncoupled from the files it works with — the library can be used with
 existing doctests, and the doctests it creates are no different to normal
@@ -68,9 +68,9 @@ This style of testing is fairly well-developed in some languages, although still
 doesn't receive the attention I think it deserves, and historically hasn't had
 good support in python.
 
-Confusingly, it's referred to "Snapshot testing" or "Regression testing" or
-"Expect testing". The best explanation I've seen on this testing style is from
-Ron Minsky in a [Jane Street
+Confusingly, it's referred to "snapshot testing" or "regression testing" or
+"expect testing" or "literate testing". The best explanation I've seen on this
+testing style is from Ron Minsky in a [Jane Street
 Blogpost](https://blog.janestreet.com/testing-with-expectations/).
 
 ## Installation
@@ -121,8 +121,8 @@ Not really! Some things to watch out for:
     designed to match the results of the code.
 - This is early, and there are probably some small bugs. Let me know and I'll
   attempt to fix them.
-- It currently doesn't affect the printing of results; the doctests will still
-  print as failures.
+- It currently doesn't affect the printing of test results; the doctests will
+  still print as failures.
   - TODO: A future version could print something about them being fixed.
 - Doctests are imperfect:
   - It can't handle indents, and probably other things. (We do handle blank
