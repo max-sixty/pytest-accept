@@ -1,6 +1,6 @@
 # pytest-accept
 
-pytest-accept writes doctests' outputs from running them.
+pytest-accept writes doctests' outputs by observing the output they generate.
 
 It's designed for a couple of use cases:
 
