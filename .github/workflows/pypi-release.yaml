@@ -4,6 +4,9 @@ on:
   push:
     tags:
       - "*"
+    # Will only release a pre-release version without a tag.
+    branches:
+      - main
 
 jobs:
   release:
