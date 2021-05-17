@@ -1,13 +1,11 @@
-[build-system]
-requires = ["poetry-core>=1.0.2", "poetry-dynamic-versioning"]
-build-backend = "poetry.core.masonry.api"
-
 [tool.poetry]
 name = "pytest-accept"
+description = "A pytest-plugin for updating doctest outputs"
+authors = ["@max-sixty"]
+repository = 'https://github.com/max-sixty/pytest-accept'
+readme = 'README.md'
 # Defined by poetry-dynamic-versioning
 version = "0"
-description = "A pytest-plugin for updating doctest outputs"
-authors = ["max-sixty"]
 
 [tool.poetry-dynamic-versioning]
 enable = true
@@ -48,3 +46,7 @@ doctest_optionflags = "NORMALIZE_WHITESPACE IGNORE_EXCEPTION_DETAIL ELLIPSIS"
 testpaths = [
     "pytest_accept"
 ]
+
+[build-system]
+requires = ["poetry-core>=1.0.2", "poetry-dynamic-versioning"]
+build-backend = "poetry.core.masonry.api"
