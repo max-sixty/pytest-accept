@@ -1,18 +1,17 @@
 # pytest-accept
 
-pytest-accept copies the generated outputs of doctests into their documented
-outputs.
+pytest-accept writes doctests' documented outputs by observing their generated outputs.
 
 It's designed for a couple of use cases:
 
 - People who work with doctests and don't enjoy manually copying and pasting
-  generated outputs from the command line into their doctests' outputs. pytest-accept will
-  do the copying & pasting for you.
+  generated outputs from the pytest error log into their doctests' outputs. 
+  pytest-accept does the copying & pasting for you.
 - People who generally find writing tests a bit annoying, and prefer to develop
-  by "running the code and see whether it works". This library aims to allow
+  by "running the code and seeing whether it works". This library aims to allow
   testing to become a joyful part of that development loop.
 
-It's uncoupled from the files it works with — the library can be used with
+pytest-accept is decoupled from the files it works with — the library can be used with
 existing doctests, and the doctests it creates are no different to normal
 doctests.
 
