@@ -1,7 +1,7 @@
 [tool.poetry]
 name = "pytest-accept"
 description = "A pytest-plugin for updating doctest outputs"
-authors = ["@max-sixty"]
+authors = ["Maximilian Roos <m@maxroos.com>"]
 repository = 'https://github.com/max-sixty/pytest-accept'
 readme = 'README.md'
 # Defined by poetry-dynamic-versioning
