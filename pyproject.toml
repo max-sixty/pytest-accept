@@ -1,9 +1,11 @@
 [tool.poetry]
 name = "pytest-accept"
 description = "A pytest-plugin for updating doctest outputs"
+repository = "https://github.com/max-sixty/pytest-accept"
+homepage = "https://github.com/max-sixty/pytest-accept"
+readme = "README.md"
+license = "Apache-2.0"
 authors = ["Maximilian Roos <m@maxroos.com>"]
-repository = 'https://github.com/max-sixty/pytest-accept'
-readme = 'README.md'
 # Defined by poetry-dynamic-versioning
 version = "0"
 
@@ -11,8 +13,8 @@ version = "0"
 enable = true
 pattern = 'v?(?P<base>[\d\.]+)'
 # PyPI doesn't like commits being in the version
-# Copied from https://github.com/mtkennerly/poetry-dynamic-versioning
-# format-jinja = "{% if distance == 0 %}{{ base }}{% else %}{{ base }}+{{ distance }}.{{ commit }}{% endif %}"
+# Adjusted from https://github.com/mtkennerly/poetry-dynamic-versioning, no
+# commit hash to make it compatible with test-pypi
 format-jinja = "{% if distance == 0 %}{{ base }}{% else %}{{ base }}.dev{{ distance }}{% endif %}"
 
 # format = "{base}.{distance}"
