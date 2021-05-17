@@ -4,9 +4,10 @@ on:
   push:
     tags:
       - "*"
-    # Will only release a pre-release version without a tag.
-    branches:
-      - main
+    # This is disabled since it conflicts when a commit is both on main and a tag.
+    # # Will only release a pre-release version without a tag.
+    # # branches:
+    # #   - main
 
 jobs:
   release:
