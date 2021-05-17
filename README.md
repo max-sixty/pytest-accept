@@ -1,7 +1,8 @@
 # pytest-accept
 
-pytest-accept writes doctests' documented outputs by observing their generated
-outputs.
+pytest-accept is a pytest plugin for automatically updating doctest outputs. It
+observes generated outputs by running doctests, and writes these to the
+doctests' documented outputs.
 
 It's designed for a couple of use cases:
 
@@ -12,14 +13,14 @@ It's designed for a couple of use cases:
   by "running the code and seeing whether it works". This library aims to allow
   testing to become a joyful part of that development loop.
 
-pytest-accept is decoupled from the files it works with — the library can be
-used with existing doctests, and the doctests it edits are no different to
-normal doctests.
+pytest-accept is decoupled from the doctests it works with — it can be used with
+existing doctests, and the doctests it edits are no different to normal
+doctests.
 
 ## Jesse, what the?
 
-Here's what pytest-accept does: given a file like
-[**`add.py`**](examples/add.py) containing an incorrect output:
+Here's an example of pytest-accept does: given a file like
+[**`add.py`**](examples/add.py) containing an incorrect documented output:
 
 ```python
 def add(x, y):
