@@ -1,5 +1,7 @@
 # pytest-accept
 
+[![Test Actions Status](https://github.com/max-sixty/pytest-accept/workflows/test/badge.svg)](https://github.com/max-sixty/pytest-accept/actions)
+
 pytest-accept is a pytest plugin for automatically updating doctest outputs. It
 observes generated outputs by running doctests, and writes these to the
 doctests' documented outputs.
