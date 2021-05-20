@@ -10,15 +10,15 @@ doctests' documented outputs.
 
 It's designed for a couple of use cases:
 
-- People who work with doctests and don't enjoy manually copying and pasting
-  generated outputs from the pytest error log into their doctests' documented
-  outputs. pytest-accept does the copying & pasting for you.
+- People who work with doctests and don't enjoy manually copying generated
+  outputs from the pytest error log to paste them into their doctests'
+  documented outputs. pytest-accept does the copying & pasting for you.
 - People who generally find writing tests a bit annoying, and prefer to develop
-  by "running the code and seeing whether it works". This library aims to allow
-  testing to become a joyful part of that development loop.
+  by "running the code and seeing whether it works". This library aims to make
+  testing a joyful part of that development loop.
 
 pytest-accept is decoupled from the doctests it works with — it can be used with
-existing doctests, and the doctests it edits are no different to normal
+existing doctests, and the doctests it edits are no different from normal
 doctests.
 
 ## Jesse, what the?
