@@ -1,8 +1,8 @@
 # pytest-accept
 
-[![Test Actions Status](https://github.com/max-sixty/pytest-accept/workflows/Test/badge.svg?branch=main)](https://github.com/max-sixty/pytest-accept/actions?query=workflow:test)
-[![PyPI version fury.io](https://badge.fury.io/py/pytest-accept.svg)](https://pypi.python.org/pypi/pytest-accept/)
-[![GitHub license](https://img.shields.io/github/license/max-sixty/pytest-accept.svg)](https://github.com/max-sixty/pytest-accept/blob/main/LICENSE)
+[![GitHub Workflow CI Status](https://img.shields.io/github/workflow/status/max-sixty/pytest-accept/Test?logo=github&style=for-the-badge)](https://github.com/max-sixty/pytest-accept/actions?query=workflow:test)
+[![PyPI Version](https://img.shields.io/pypi/v/pytest-accept?style=for-the-badge)](https://pypi.python.org/pypi/pytest-accept/)
+[![GitHub License](https://img.shields.io/github/license/max-sixty/pytest-accept?style=for-the-badge)](https://github.com/max-sixty/pytest-accept/blob/main/LICENSE)
 
 pytest-accept is a pytest plugin for automatically updating doctest outputs. It
 observes generated outputs by running doctests, and writes these to the
