@@ -5,13 +5,13 @@
 [![GitHub License](https://img.shields.io/github/license/max-sixty/pytest-accept?style=for-the-badge)](https://github.com/max-sixty/pytest-accept/blob/main/LICENSE)
 
 pytest-accept is a pytest plugin for automatically updating doctest outputs. It
-observes generated outputs by running doctests, and writes these to the
-doctests' documented outputs.
+runs doctests, observes the generated outputs, and writes them to the doctests'
+documented outputs.
 
 It's designed for a couple of use cases:
 
 - People who work with doctests and don't enjoy manually copying generated
-  outputs from the pytest error log to paste them into their doctests'
+  outputs from the pytest error log and pasting them into their doctests'
   documented outputs. pytest-accept does the copying & pasting for you.
 - People who generally find writing tests a bit annoying, and prefer to develop
   by "running the code and seeing whether it works". This library aims to make
