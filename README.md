@@ -76,7 +76,9 @@ good support in python.
 Confusingly, it's referred to "snapshot testing" or "regression testing" or
 "expect testing" or "literate testing" or "acceptance testing". The best
 explanation I've seen on this testing style is from Ron Minsky in a [Jane Street
-Blogpost](https://blog.janestreet.com/testing-with-expectations/).
+Blogpost](https://blog.janestreet.com/testing-with-expectations/). @matklad
+also has an excellent summary in his blog post [How to
+Test](https://matklad.github.io//2021/05/31/how-to-test.html).
 
 ## Installation
 
