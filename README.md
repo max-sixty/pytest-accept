@@ -140,6 +140,8 @@ Not really! Some things to watch out for:
     continuing a code line, so it can't be at the start of a line.
   - The syntax for all the directives is arguably less than aesthetically
     pleasing.
+  - It doesn't have an option for pretty printing, so the test must pretty
+    print, which is verbose.
   - It reports line numbers incorrectly in some cases — two docstring lines
     separated with continuation character `\` is counted as one, meaning this
     library will not have access to the correct line number for doctest inputs
