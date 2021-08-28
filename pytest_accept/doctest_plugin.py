@@ -78,11 +78,13 @@ def _to_doctest_format(output: str) -> str:
     """
 
     This passes a doctost because it has `<BLANKLINE>`s in the correct place.
-    >>> print('''
+    >>> print(
+    ...     '''
     ... hello
     ...
     ... world
-    ... ''')
+    ... '''
+    ... )
     <BLANKLINE>
     hello
     <BLANKLINE>
@@ -90,11 +92,13 @@ def _to_doctest_format(output: str) -> str:
 
     A test that this is also what the function creates (but we have to add a prefix, or
     it'll treat it as an actual blank line! Maybe this is pushing doctests too far!):
-    >>> for line in _to_doctest_format('''
+    >>> for line in _to_doctest_format(
+    ...     '''
     ... hello
     ...
     ... world
-    ... ''').splitlines():
+    ... '''
+    ... ).splitlines():
     ...     print(f"# {line}")
     # <BLANKLINE>
     # hello
