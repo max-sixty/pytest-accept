@@ -75,6 +75,39 @@ def pytest_configure(config):
 
 
 def _to_doctest_format(output: str) -> str:
+    """
+
+    This passes the doctest because it has `<BLANKLINE>`s in the correct place.
+    >>> print(
+    ...     '''
+    ... hello
+    ...
+    ... world
+    ... '''
+    ... )
+    <BLANKLINE>
+    hello
+    <BLANKLINE>
+    world
+
+    We can also use a test to confirm this is what the function creates (but we have to
+    add a prefix, or it'll treat it as an actual blank line! Maybe this is pushing
+    doctests too far!):
+    >>> for line in _to_doctest_format(
+    ...     '''
+    ... hello
+    ...
+    ... world
+    ... '''
+    ... ).splitlines():
+    ...     print(f"# {line}")
+    # <BLANKLINE>
+    # hello
+    # <BLANKLINE>
+    # world
+
+    """
+
     lines = output.splitlines()
     blankline_sentinel = "<BLANKLINE>"
     transformed_lines = [line if line else blankline_sentinel for line in lines]
@@ -82,6 +115,9 @@ def _to_doctest_format(output: str) -> str:
 
 
 def pytest_sessionfinish(session, exitstatus):
+    """
+    Write generated doctest results to their appropriate files
+    """
 
     assert session.config.option.doctest_continue_on_failure
 
