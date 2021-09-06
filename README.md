@@ -119,16 +119,21 @@ Some alternatives:
 
 Not really! Some things to watch out for:
 
-- It'll replace the file at the end of a test. So — to the extent there are
-  useful changes to the file between the start and and the end of a test — it'll
-  overwrite them. Passing `--accept-copy` will cause the plugin to instead
+- It attempts to confirm the file hasn't changed between the start and end of
+  the test and won't overwrite the file in those cases. This can be helpful for
+  workflows where the tests run repeatedly in the background (using something
+  like [watchexec](https://github.com/watchexec/watchexec) while someone is
+  working on the file, on when the tests take a long time, maybe because of `--pdb`
+  To be doubly careful, passing `--accept-copy` will cause the plugin to instead
   create a file named `{file}.py.new`.
-  - TODO: Should we disable the plugin on `--pdb` as one way of long-running
-    tests?
-  - It will overwrite the existing values, though these aren't generally useful
-    — they're designed to match the results of the code.
-- This is early, and there are probably some small bugs. Let me know and I'll
-  attempt to fix them.
+  - It will overwrite the existing documented values, though these aren't
+    generally useful per se — they're designed to match the generated of the
+    code. The only time they could be useful is if there's manual curation (e.g.
+    removing volatile outputs like hashes), and in those cases ideally they can
+    be restored from version control, or pass `--accept-copy` to be
+    conservative.
+- This is early, and there are probably some small bugs. Let me know anything at
+  all and I'll attempt to fix them.
 - It currently doesn't affect the printing of test results; the doctests will
   still print as failures.
   - TODO: A future version could print something about them being fixed.

@@ -49,13 +49,53 @@ def add_example():
 
     And the tests now pass:
 
-    # (For some reason we need to delete the pyc file, TODO: work out why upstream)
+    (For some reason we need to delete the pyc file, TODO: work out why upstream, and
+    TODO: if it's not fix-able then change this to remove all pyc files.)
     >>> (pytester.path / "__pycache__/add.cpython-38.pyc").unlink()
 
     >>> result = pytester.runpytest("--doctest-modules", "--accept")
     =...
-    add.py .                                                                                                                                                                   [100%]
-    =... 1 passed ...
+    add.py ...
+    =... passed ...
+
+    """
+
+
+def no_overwrite_example():
+    """
+
+    pytest-accept won't overwrite the file if its contents change between the time of
+    running the test and writing the generated values.
+
+    >>> pytester = getfixture("pytester")
+
+    >>> pytest.skip(
+    ...     "I can't seem to work out a good way of testing this, since it "
+    ...     "requires adjusting files midway through the test. So skipping for now."
+    ... )
+
+    >>> if sys.platform == "win32":
+    ...     pytest.skip("Paths differ on windows")
+    ...
+    >>> path = pytester.copy_example("add.py")
+
+    Collect the tests, to simulate starting the tests:
+    >>> (item,), rec = pytester.inline_genitems("--doctest-modules", "--accept")
+    ===...
+    ...
+    ===...
+    >>> item
+    <DoctestItem add.add>
+
+    Now change the file:
+    >>> path.open("w+").write(" ")
+    1
+
+    # TODO: Is there a way to run the test like this?
+    # >>> item.runtest()
+    # >>> item.runner.run()
+    Now the file should _not_ be overwritten:
+    >>> print((pytester.path / "add.py").read_text())
 
     """
 

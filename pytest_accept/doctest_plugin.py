@@ -1,5 +1,6 @@
 import logging
 import textwrap
+import warnings
 from collections import defaultdict
 from doctest import DocTestFailure
 from itertools import zip_longest
@@ -20,6 +21,17 @@ logger = logging.getLogger(__name__)
 
 # Dict of {path: list of (location, new code)}
 failed_doctests: Dict[Path, List[DocTestFailure]] = defaultdict(list)
+
+# Dict of filename to hashes, so we don't overwrite a changed file
+file_hashes: Dict[Path, int] = {}
+
+
+def pytest_collect_file(path, parent):
+    """
+    Store the hash of the file so we can check if it changed later
+    """
+    path = Path(path)
+    file_hashes[path] = hash(path.read_bytes())
 
 
 @pytest.hookimpl(hookwrapper=True, tryfirst=True)
@@ -127,6 +139,21 @@ def pytest_sessionfinish(session, exitstatus):
         return
 
     for path, failures in failed_doctests.items():
+
+        # Check if the file has changed since the start of the test.
+        current_hash = hash(path.read_bytes())
+        if path not in file_hashes:
+            warnings.warn(
+                f"{path} not found by pytest-accept as having collected tests "
+                "at the start of the session. Proceeding to overwrite. Please "
+                "report an issue if this occurs unexpectedly. Full path list is "
+                f"{file_hashes}"
+            )
+        elif not passed_accept_copy and current_hash != file_hashes[path]:
+            logger.warning(
+                f"File changed since start of test, not writing results: {path}"
+            )
+            continue
 
         # sort by line number
         failures = sorted(failures, key=lambda x: x.test.lineno or 0)
