@@ -35,12 +35,14 @@ isort = "5.8.0"
 mypy = "^0.910"
 blackdoc = "^0.3.4"
 pre-commit = "^2.14.0"
+pdbpp = "^0.10.3"
 
 [tool.isort]
 profile = "black"
 skip_gitignore = true
 default_section = "THIRDPARTY"
 known_first_party = ["pytest-accept"]
+float_to_top = true
 
 [tool.pytest.ini_options]
 pytester_example_dir = "examples"
