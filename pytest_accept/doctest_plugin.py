@@ -123,7 +123,15 @@ def _to_doctest_format(output: str) -> str:
     lines = output.splitlines()
     blankline_sentinel = "<BLANKLINE>"
     transformed_lines = [line if line else blankline_sentinel for line in lines]
-    return "\n".join(transformed_lines)
+    # In some pathological cases, this can crash an editor.
+    shortened_lines = [
+        line if len(line) < 1000 else f"{line[:50]}...{line[-50:]}"
+        for line in transformed_lines
+    ]
+    # Again, only for the pathological cases.
+    if len(shortened_lines) > 1000:
+        shortened_lines = shortened_lines[:50] + ["..."] + shortened_lines[-50:]
+    return "\n".join(shortened_lines)
 
 
 def pytest_sessionfinish(session, exitstatus):
