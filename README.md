@@ -55,16 +55,16 @@ index 10a71fd..c2c945f 100644
 +++ b/examples/add.py
 @@ -3,10 +3,10 @@ def add(x, y):
      Adds two values.
- 
+
      >>> add(1, 1)
 -    3
 +    2
- 
+
      >>> add("ab", "c")
 -    'bac'
 +    'abc'
      """
- 
+
      return x + y
 
 ```

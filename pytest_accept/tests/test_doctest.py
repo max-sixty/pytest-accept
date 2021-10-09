@@ -50,8 +50,9 @@ def add_example():
     And the tests now pass:
 
     (For some reason we need to delete the pyc file, TODO: work out why upstream
-    >>> for f in pytester.path.glob(r'**/*.pyc'):
+    >>> for f in pytester.path.glob(r"**/*.pyc"):
     ...     f.unlink()
+    ...
 
     >>> result = pytester.runpytest("--doctest-modules", "--accept")
     =...
