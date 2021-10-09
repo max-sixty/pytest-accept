@@ -1,16 +1,18 @@
+# @max-sixty's standard set
 repos:
+  - repo: https://github.com/myint/autoflake
+    rev: "v1.4"
+    hooks:
+      - id: autoflake
   - repo: https://github.com/PyCQA/isort
     rev: "5.8.0"
     hooks:
       - id: isort
-  - repo: https://github.com/psf/black
-    rev: "21.7b0"
-    hooks:
-      - id: black
   - repo: https://gitlab.com/pycqa/flake8
     rev: "3.9.2"
     hooks:
       - id: flake8
+        additional_dependencies: [pep8-naming==0.12.1]
   - repo: https://github.com/pre-commit/mirrors-mypy
     rev: v0.910
     hooks:
@@ -19,3 +21,28 @@ repos:
     rev: v0.3.4
     hooks:
       - id: blackdoc
+  - repo: https://github.com/asottile/pyupgrade
+    rev: v2.26.0
+    hooks:
+      - id: pyupgrade
+        args: ["--py37-plus"]
+  # black should go at the end, since it's the most likely to change others' changes.
+  - repo: https://github.com/psf/black
+    rev: "21.5b1"
+    hooks:
+      - id: black
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v4.0.1
+    hooks:
+      # sql files are excluded because it would cause a large number of changes.
+      # When we're more comfortable with these, remove the exclusions.
+      # Regtest out files are excluded.
+      - id: trailing-whitespace
+        exclude: '(.*\.sql)|(.*\.out)'
+      - id: end-of-file-fixer
+        exclude: '(.*\.sql)|(.*\.out)'
+      - id: check-yaml
+        # `.gitlab.ci.yml` uses a tag that requires this exclusion.
+        args: [--unsafe]
+      - id: debug-statements
+      - id: mixed-line-ending
