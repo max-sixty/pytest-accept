@@ -49,9 +49,10 @@ def add_example():
 
     And the tests now pass:
 
-    (For some reason we need to delete the pyc file, TODO: work out why upstream, and
-    TODO: if it's not fix-able then change this to remove all pyc files.)
-    >>> (pytester.path / "__pycache__/add.cpython-38.pyc").unlink()
+    (For some reason we need to delete the pyc file, TODO: work out why upstream
+    >>> for f in pytester.path.glob(r"**/*.pyc"):
+    ...     f.unlink()
+    ...
 
     >>> result = pytester.runpytest("--doctest-modules", "--accept")
     =...
