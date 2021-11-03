@@ -31,11 +31,12 @@ repos:
     rev: "21.5b1"
     hooks:
       - id: black
-  - repo: https://github.com/ComPWA/mirrors-markdown-link-check
-    rev: v3.8.7
-    hooks:
-      - id: markdown-link-check
-        files: \.md$
+  # This doesn't seem to work from pre-commit.ci; which may not have internet access
+  # - repo: https://github.com/ComPWA/mirrors-markdown-link-check
+  #   rev: v3.8.7
+  #   hooks:
+  #     - id: markdown-link-check
+  #       files: \.md$
   - repo: https://github.com/pre-commit/pre-commit-hooks
     rev: v4.0.1
     hooks:
