@@ -31,18 +31,17 @@ repos:
     rev: "21.10b0"
     hooks:
       - id: black
+  # This doesn't seem to work from pre-commit.ci; which may not have internet access
+  # - repo: https://github.com/ComPWA/mirrors-markdown-link-check
+  #   rev: v3.8.7
+  #   hooks:
+  #     - id: markdown-link-check
+  #       files: \.md$
   - repo: https://github.com/pre-commit/pre-commit-hooks
     rev: v4.0.1
     hooks:
-      # sql files are excluded because it would cause a large number of changes.
-      # When we're more comfortable with these, remove the exclusions.
-      # Regtest out files are excluded.
       - id: trailing-whitespace
-        exclude: '(.*\.sql)|(.*\.out)'
       - id: end-of-file-fixer
-        exclude: '(.*\.sql)|(.*\.out)'
       - id: check-yaml
-        # `.gitlab.ci.yml` uses a tag that requires this exclusion.
-        args: [--unsafe]
       - id: debug-statements
       - id: mixed-line-ending
