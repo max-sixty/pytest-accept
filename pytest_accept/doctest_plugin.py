@@ -1,4 +1,5 @@
 import logging
+import re
 import textwrap
 import warnings
 from collections import defaultdict
@@ -123,7 +124,7 @@ def _to_doctest_format(output: str) -> str:
     lines = output.splitlines()
     blankline_sentinel = "<BLANKLINE>"
     transformed_lines = [line if line else blankline_sentinel for line in lines]
-    # In some pathological cases, this can crash an editor.
+    # In some pathological cases, really long lines can crash an editor.
     shortened_lines = [
         line if len(line) < 1000 else f"{line[:50]}...{line[-50:]}"
         for line in transformed_lines
@@ -131,7 +132,24 @@ def _to_doctest_format(output: str) -> str:
     # Again, only for the pathological cases.
     if len(shortened_lines) > 1000:
         shortened_lines = shortened_lines[:50] + ["..."] + shortened_lines[-50:]
-    return "\n".join(shortened_lines)
+    output = "\n".join(shortened_lines)
+    return _redact_volatile(output)
+
+
+def _redact_volatile(output: str) -> str:
+    """
+    Replace some volatile values, like temp paths & memory locations.
+
+    >>> _redact_volatile("<__main__.A at 0x10b80ce50>")
+    '<__main__.A at 0x...>'
+
+    >>> _redact_volatile("/tmp/abcd234/pytest-accept-test-temp-file-0.py")
+    '/tmp/.../pytest-accept-test-temp-file-0.py'
+
+    """
+    mem_locations = re.sub(r" 0x[0-9a-fA-F]+", " 0x...", output)
+    temp_paths = re.sub(r"/tmp/[0-9a-fA-F]+", "/tmp/...", mem_locations)
+    return temp_paths
 
 
 def pytest_sessionfinish(session, exitstatus):
