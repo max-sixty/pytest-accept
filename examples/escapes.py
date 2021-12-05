@@ -2,7 +2,7 @@ def func(a, b):
     r"""
     Example:
     >>> import xarray as xr
-    >>> x = func(xr.DataArray([5], dims='a'), xr.DataArray([1], dims='a'))
+    >>> x = func(xr.DataArray([5], dims="a"), xr.DataArray([1], dims="a"))
     >>> s = x.__repr__()
     >>> x
     <xarray.DataArray (a: 1)>
