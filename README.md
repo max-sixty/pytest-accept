@@ -117,14 +117,39 @@ Some alternatives:
 
 ## Anything else?
 
-Not really! Some notes:
+Nothing ground-breaking! Some notes:
 
+- If a docstring uses escape characters such as `\n`, python will interpret them
+  as the escape character rather than the literal. Use a raw string to have it
+  interpreted as a literal. e.g. this fails:
+
+    ```python
+    def raw_string():
+        """
+        >>> "\n"
+        '\n'
+        """
+    ```
+
+    but succeeds with:
+
+    ```diff
+    def raw_string():
+    -    """
+    +    r"""
+        >>> "\n"
+        '\n'
+     ```
+
+  Possibly pytest-accept could do more here — e.g. change the format of the
+  docstring. But that would not be trivial to implement, and may be too
+  invasive.
 - The library attempts to confirm the file hasn't changed between the start and
   end of the test and won't overwrite the file where it detects there's been a
   change. This can be helpful for workflows where the tests run repeatedly in
   the background (e.g. using something like
   [watchexec](https://github.com/watchexec/watchexec)) while a person is working
-  on the file, or when the tests take a long time, maybe because of `--pdb` To
+  on the file, or when the tests take a long time, maybe because of `--pdb`. To
   be doubly careful, passing `--accept-copy` will cause the plugin to instead
   create a file named `{file}.py.new` rather than overwriting the file on any
   doctest failure.
@@ -132,23 +157,26 @@ Not really! Some notes:
     generally useful per se — they're designed to match the generated of the
     code. The only instances they could be useful is where they've been manual
     curated (e.g. removing volatile outputs like hashes), and in those cases
-    ideally they can be restored from version control. Or pass `--accept-copy`
-    to be conservative.
-- This is early, and there are probably some small bugs. Let me know anything at
-  all and I'll attempt to fix them.
+    ideally they can be restored from version control. Or as above, pass
+    `--accept-copy` to be conservative.
+- This is still fairly early, has mostly been used by me &
+  [xarray](https://github.com/pydata/xarray/pull/5950#issuecomment-974687406)
+  and there may be some small bugs. Let me know anything at all and I'll attempt
+  to fix them.
 - It currently doesn't affect the printing of test results; the doctests will
   still print as failures.
   - TODO: A future version could print something about them being fixed.
 - Python's doctest library is imperfect:
-  - It can't handle indents, and probably other things. (We do handle blank
-    lines though, and TODO: check whether the output we paste is valid doctest
-    output).
+  - It can't handle indents, and probably other things.
+    - We modify the output to match the doctest format; e.g. with blanklines. If
+      generated output isn't sufficient for the doctest to pass, and there is
+      some form of output that's sufficient, please report as a bug.
   - The syntax for `.*` is an ellipsis `...`, which is also the syntax for
-    continuing a code line, so it can't be at the start of a line.
+    continuing a code line, so the beginning of a line must always be specified.
   - The syntax for all the directives is arguably less than aesthetically
     pleasing.
-  - It doesn't have an option for pretty printing, so the test must pretty
-    print, which is verbose.
+  - It doesn't have an option for pretty printing, so the test must pretty print
+    itself with `pprint(x)`, which is verbose.
   - It reports line numbers incorrectly in some cases — two docstring lines
     separated with continuation character `\` is counted as one, meaning this
     library will not have access to the correct line number for doctest inputs
