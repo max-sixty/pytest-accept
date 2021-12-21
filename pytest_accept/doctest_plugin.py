@@ -184,9 +184,9 @@ def pytest_sessionfinish(session, exitstatus):
         # sort by line number
         failures = sorted(failures, key=lambda x: x.test.lineno or 0)
 
-        original = list(path.read_text().splitlines())
+        original = list(path.read_text(encoding="utf-8").splitlines())
         path = path.with_suffix(".py.new") if passed_accept_copy else path
-        with path.open("w+") as file:
+        with path.open("w+", encoding="utf-8") as file:
 
             # TODO: is there cleaner way of doing this interleaving?
 
