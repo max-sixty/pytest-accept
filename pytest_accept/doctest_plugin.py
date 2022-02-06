@@ -5,7 +5,7 @@ from collections import defaultdict
 from doctest import DocTestFailure
 from itertools import zip_longest
 from pathlib import Path
-from typing import Dict, List, IO
+from typing import IO, Dict, List
 
 import pytest
 from _pytest.doctest import DoctestItem, MultipleDoctestFailures
@@ -85,7 +85,8 @@ def pytest_configure(config):
     """Sets doctests to continue after first failure"""
     config.option.doctest_continue_on_failure = True
 
-def _to_doctest_format_fd(f : IO, output : str, indent : int):
+
+def _to_doctest_format_fd(f: IO, output: str, indent: int):
     ind = lambda x: (" " * indent) + x
 
     lines = output.splitlines()
@@ -97,7 +98,7 @@ def _to_doctest_format_fd(f : IO, output : str, indent : int):
             if len(line) < 80:
                 f.write(ind(line) + "\n")
             else:
-                
+
                 f.write(ind(line[:80]))
                 line = line[80:]
                 while line:
@@ -215,7 +216,7 @@ def pytest_sessionfinish(session, exitstatus):
                 print(line, file=file)
 
             for current, next in zip_longest(failures, failures[1:]):
-                
+
                 _to_doctest_format_fd(file, current.got, indent=current.example.indent)
 
                 current_finish_line = _snapshot_start_line(current) + len(
