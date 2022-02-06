@@ -1,12 +1,11 @@
 import logging
 import re
-import textwrap
 import warnings
 from collections import defaultdict
 from doctest import DocTestFailure
 from itertools import zip_longest
 from pathlib import Path
-from typing import Dict, List
+from typing import Dict, List, IO
 
 import pytest
 from _pytest.doctest import DoctestItem, MultipleDoctestFailures
@@ -85,6 +84,26 @@ def pytest_addoption(parser):
 def pytest_configure(config):
     """Sets doctests to continue after first failure"""
     config.option.doctest_continue_on_failure = True
+
+def _to_doctest_format_fd(f : IO, output : str, indent : int):
+    ind = lambda x: (" " * indent) + x
+
+    lines = output.splitlines()
+    for line in lines:
+        line = _redact_volatile(line)
+        if not line:
+            f.write(ind("<BLANKLINE>\n"))
+        else:
+            if len(line) < 80:
+                f.write(ind(line) + "\n")
+            else:
+                
+                f.write(ind(line[:80]))
+                line = line[80:]
+                while line:
+                    f.write("\\\n" + line[:80])
+                    line = line[80:]
+                f.write("\n")
 
 
 def _to_doctest_format(output: str) -> str:
@@ -196,13 +215,8 @@ def pytest_sessionfinish(session, exitstatus):
                 print(line, file=file)
 
             for current, next in zip_longest(failures, failures[1:]):
-
-                snapshot_result = _to_doctest_format(current.got)
-                indented = textwrap.indent(
-                    snapshot_result, prefix=" " * current.example.indent
-                )
-                for line in indented.splitlines():
-                    print(line, file=file)
+                
+                _to_doctest_format_fd(file, current.got, indent=current.example.indent)
 
                 current_finish_line = _snapshot_start_line(current) + len(
                     current.example.want.splitlines()
