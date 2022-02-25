@@ -23,7 +23,7 @@ doctests.
 
 ## Jesse, what the?
 
-Here's an example of pytest-accept does: given a file like
+Here's an example of what pytest-accept does: given a file like
 [**`add.py`**](examples/add.py) containing an incorrect documented output:
 
 ```python
