@@ -41,9 +41,6 @@ index c704339..697e266 100644
      assert 2 == 3
 ```
 
-...whether or not it overwrites the original file or creates a new file with a
-`.new` suffix is controlled by the `OVERWRITE` constant in `conftest.py`.
-
 ## Current shortcomings
 
 ### Big ones
@@ -88,13 +85,8 @@ logger = logging.getLogger(__name__)
 # Dict of {path: list of (location, new code)}
 asts_modified: Dict[str, List[Tuple[slice, str]]] = defaultdict(list)
 
-OVERWRITE = False
 
-
-@pytest.hookimpl(hookwrapper=True, tryfirst=True)
-def pytest_runtest_makereport(item, call):
-    outcome = yield
-
+def pytest_runtest_makereport(item, call, outcome):
     if not call.excinfo or not isinstance(call.excinfo.value, AssertionError):
         return
 
@@ -109,7 +101,7 @@ def pytest_runtest_makereport(item, call):
     original_location = slice(line_number_start, line_number_end)
 
     path = tb_entry.path
-    tree = ast.parse(path.read())
+    tree = ast.parse(path.open().read())
 
     for item in ast.walk(tree):
         if isinstance(item, ast.Assert) and original_location.start == item.lineno:
@@ -123,26 +115,29 @@ def pytest_runtest_makereport(item, call):
             new_assert = copy.copy(item)
             new_assert.test.comparators[0] = ast.Constant(value=left)
 
-    asts_modified[path].append((original_location, new_assert))
-    return outcome.get_result()
+            asts_modified[path].append((original_location, new_assert))
 
 
 recent_failure: List[Tuple] = []
 
 
 def pytest_assertrepr_compare(config, op, left, right):
-
     recent_failure.append((op, left, right))
 
 
 def pytest_sessionfinish(session, exitstatus):
+
+    passed_accept = session.config.getoption("--accept")
+    passed_accept_copy = session.config.getoption("--accept-copy")
+    if not (passed_accept or passed_accept_copy):
+        return
 
     for path, new_asserts in asts_modified.items():
         original = list(open(path).readlines())
         # sort by line number
         new_asserts = sorted(new_asserts, key=lambda x: x[0].start)
 
-        file = open(path + (".new" if not OVERWRITE else ""), "w+")
+        file = open(str(path) + (".new" if passed_accept_copy else ""), "w+")
 
         for i, line in enumerate(original):
             line_no = i + 1

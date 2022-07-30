@@ -35,11 +35,7 @@ def pytest_collect_file(path, parent):
     file_hashes[path] = hash(path.read_bytes())
 
 
-@pytest.hookimpl(hookwrapper=True, tryfirst=True)
-def pytest_runtest_makereport(item, call):
-    # Returning this is required by pytest.
-    outcome = yield
-
+def pytest_runtest_makereport(item, call, outcome):
     if not isinstance(item, DoctestItem) or not call.excinfo:
         return
 
@@ -54,31 +50,12 @@ def pytest_runtest_makereport(item, call):
             if isinstance(failure, DocTestFailure):
                 failed_doctests[Path(failure.test.filename)].append(failure)
 
-    return outcome.get_result()
-
 
 def _snapshot_start_line(failure):
     return (
         failure.test.lineno
         + failure.example.lineno
         + len(failure.example.source.splitlines())
-    )
-
-
-def pytest_addoption(parser):
-    """Add pytest-accept options to pytest"""
-    group = parser.getgroup("accept", "accept test plugin")
-    group.addoption(
-        "--accept",
-        action="store_true",
-        default=False,
-        help="Accept the output of doctests, overwriting python files with generated results.",
-    )
-    group.addoption(
-        "--accept-copy",
-        action="store_true",
-        default=False,
-        help="Write a copy of python file named `.py.new` with the generated results of doctests.",
     )
 
 
