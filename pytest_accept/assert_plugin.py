@@ -70,8 +70,9 @@ index c704339..697e266 100644
   we can make it one.
 """
 
-
+import sys
 import ast
+from datetime import datetime
 import copy
 import logging
 from collections import defaultdict
@@ -79,22 +80,71 @@ from typing import Dict, List, Tuple
 
 import astor
 import pytest
+from _pytest._code.code import ExceptionInfo
+import yaml
 
 logger = logging.getLogger(__name__)
 
 # Dict of {path: list of (location, new code)}
 asts_modified: Dict[str, List[Tuple[slice, str]]] = defaultdict(list)
 
+INTERCEPT_ASSERTIONS = False
 
-def pytest_runtest_makereport(item, call, outcome):
-    if not call.excinfo or not isinstance(call.excinfo.value, AssertionError):
+_ASSERTION_HANDLER = ast.parse("""
+__import__("pytest_accept").assert_plugin.__handle_failed_assertion()
+""").body
+
+def _patch_assertion_rewriter():
+    # I'm so sorry.
+
+    from _pytest.assertion.rewrite import AssertionRewriter
+    old_visit_assert = AssertionRewriter.visit_Assert
+    def new_visit_assert(self, assert_):
+        rv = old_visit_assert(self, assert_)
+
+        try_except = ast.Try(
+            body=rv,
+            handlers=[
+                ast.ExceptHandler(
+                    expr=AssertionError,
+                    identifier="__pytest_accept_e",
+                    body=_ASSERTION_HANDLER
+                )
+            ],
+            orelse=[],
+            finalbody=[],
+        )
+
+        ast.copy_location(try_except, assert_)
+        for node in ast.iter_child_nodes(try_except):
+            ast.copy_location(node, assert_)
+
+        return [try_except]
+
+    AssertionRewriter.visit_Assert = new_visit_assert
+
+_patch_assertion_rewriter()
+
+def __handle_failed_assertion():
+    raw_excinfo = sys.exc_info()
+    if raw_excinfo is None:
         return
+
+    __handle_failed_assertion_impl(raw_excinfo)
+
+    if not INTERCEPT_ASSERTIONS:
+        raise
+
+
+def __handle_failed_assertion_impl(raw_excinfo):
+    excinfo = ExceptionInfo.from_exc_info(raw_excinfo)
 
     op, left, _ = recent_failure.pop()
     if op != "==":
-        logger.debug(f"{item.nodeid} does not assert equality, and won't be replaced")
+        logger.debug("does not assert equality, and won't be replaced")
+        return
 
-    tb_entry = call.excinfo.traceback[0]
+    tb_entry = excinfo.traceback[0]
     # not exactly sure why +1, but in tb_entry.__repr__
     line_number_start = tb_entry.lineno + 1
     line_number_end = line_number_start + len(tb_entry.statement.lines) - 1
@@ -107,10 +157,15 @@ def pytest_runtest_makereport(item, call, outcome):
         if isinstance(item, ast.Assert) and original_location.start == item.lineno:
             # we need to _then_ check that the next compare item's
             # ops[0] is Eq and then replace the comparator[0]
-            assert item.msg is None
-            assert len(item.test.comparators) == 1
-            assert len(item.test.ops) == 1
-            assert isinstance(item.test.ops[0], ast.Eq)
+            try:
+                assert item.msg is None
+                assert len(item.test.comparators) == 1
+                assert len(item.test.ops) == 1
+                assert isinstance(item.test.ops[0], ast.Eq)
+
+                ast.literal_eval(item.test.comparators[0])
+            except Exception:
+                continue
 
             new_assert = copy.copy(item)
             new_assert.test.comparators[0] = ast.Constant(value=left)
@@ -124,12 +179,14 @@ recent_failure: List[Tuple] = []
 def pytest_assertrepr_compare(config, op, left, right):
     recent_failure.append((op, left, right))
 
+def pytest_sessionstart(session):
+    global INTERCEPT_ASSERTIONS
+    INTERCEPT_ASSERTIONS = session.config.getoption("--accept-continue")
+
 
 def pytest_sessionfinish(session, exitstatus):
-
     passed_accept = session.config.getoption("--accept")
-    passed_accept_copy = session.config.getoption("--accept-copy")
-    if not (passed_accept or passed_accept_copy):
+    if not passed_accept:
         return
 
     for path, new_asserts in asts_modified.items():
@@ -137,7 +194,10 @@ def pytest_sessionfinish(session, exitstatus):
         # sort by line number
         new_asserts = sorted(new_asserts, key=lambda x: x[0].start)
 
-        file = open(str(path) + (".new" if passed_accept_copy else ""), "w+")
+        file = open(str(path) + ({
+            "new": ".new",
+            "overwrite": "",
+        }[passed_accept]), "w+")
 
         for i, line in enumerate(original):
             line_no = i + 1
