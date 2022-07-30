@@ -70,18 +70,18 @@ index c704339..697e266 100644
   we can make it one.
 """
 
-import sys
 import ast
-from datetime import datetime
 import copy
 import logging
+import sys
 from collections import defaultdict
+from datetime import datetime
 from typing import Dict, List, Tuple
 
 import astor
 import pytest
-from _pytest._code.code import ExceptionInfo
 import yaml
+from _pytest._code.code import ExceptionInfo
 
 logger = logging.getLogger(__name__)
 
@@ -90,15 +90,20 @@ asts_modified: Dict[str, List[Tuple[slice, str]]] = defaultdict(list)
 
 INTERCEPT_ASSERTIONS = False
 
-_ASSERTION_HANDLER = ast.parse("""
+_ASSERTION_HANDLER = ast.parse(
+    """
 __import__("pytest_accept").assert_plugin.__handle_failed_assertion()
-""").body
+"""
+).body
+
 
 def _patch_assertion_rewriter():
     # I'm so sorry.
 
     from _pytest.assertion.rewrite import AssertionRewriter
+
     old_visit_assert = AssertionRewriter.visit_Assert
+
     def new_visit_assert(self, assert_):
         rv = old_visit_assert(self, assert_)
 
@@ -108,7 +113,7 @@ def _patch_assertion_rewriter():
                 ast.ExceptHandler(
                     expr=AssertionError,
                     identifier="__pytest_accept_e",
-                    body=_ASSERTION_HANDLER
+                    body=_ASSERTION_HANDLER,
                 )
             ],
             orelse=[],
@@ -123,7 +128,9 @@ def _patch_assertion_rewriter():
 
     AssertionRewriter.visit_Assert = new_visit_assert
 
+
 _patch_assertion_rewriter()
+
 
 def __handle_failed_assertion():
     raw_excinfo = sys.exc_info()
@@ -179,6 +186,7 @@ recent_failure: List[Tuple] = []
 def pytest_assertrepr_compare(config, op, left, right):
     recent_failure.append((op, left, right))
 
+
 def pytest_sessionstart(session):
     global INTERCEPT_ASSERTIONS
     INTERCEPT_ASSERTIONS = session.config.getoption("--accept-continue")
@@ -194,10 +202,16 @@ def pytest_sessionfinish(session, exitstatus):
         # sort by line number
         new_asserts = sorted(new_asserts, key=lambda x: x[0].start)
 
-        file = open(str(path) + ({
-            "new": ".new",
-            "overwrite": "",
-        }[passed_accept]), "w+")
+        file = open(
+            str(path)
+            + (
+                {
+                    "new": ".new",
+                    "overwrite": "",
+                }[passed_accept]
+            ),
+            "w+",
+        )
 
         for i, line in enumerate(original):
             line_no = i + 1
