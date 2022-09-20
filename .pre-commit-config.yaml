@@ -1,7 +1,7 @@
 # @max-sixty's standard set
 repos:
-  - repo: https://github.com/myint/autoflake
-    rev: "v1.4"
+  - repo: https://github.com/PyCQA/autoflake
+    rev: "v1.6.0"
     hooks:
       - id: autoflake
   - repo: https://github.com/PyCQA/isort
@@ -18,17 +18,17 @@ repos:
     hooks:
       - id: mypy
   - repo: https://github.com/keewis/blackdoc
-    rev: v0.3.5
+    rev: v0.3.7
     hooks:
       - id: blackdoc
   - repo: https://github.com/asottile/pyupgrade
-    rev: v2.37.3
+    rev: v2.38.0
     hooks:
       - id: pyupgrade
         args: ["--py37-plus"]
   # black should go at the end, since it's the most likely to change others' changes.
   - repo: https://github.com/psf/black
-    rev: "22.6.0"
+    rev: "22.8.0"
     hooks:
       - id: black
   # This doesn't seem to work from pre-commit.ci; which may not have internet access
