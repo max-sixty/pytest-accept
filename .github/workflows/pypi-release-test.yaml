@@ -3,9 +3,7 @@ name: Test release to PyPI
 on:
   push:
     branches:
-      # FIXME renable filter before merging
-      - "*"
-      # - main
+      - main
     # tags:
     #   - "*"
 
