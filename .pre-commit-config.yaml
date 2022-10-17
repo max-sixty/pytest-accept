@@ -1,7 +1,7 @@
 # @max-sixty's standard set
 repos:
   - repo: https://github.com/PyCQA/autoflake
-    rev: "v1.7.1"
+    rev: "v1.7.6"
     hooks:
       - id: autoflake
   - repo: https://github.com/PyCQA/isort
@@ -22,7 +22,7 @@ repos:
     hooks:
       - id: blackdoc
   - repo: https://github.com/asottile/pyupgrade
-    rev: v3.0.0
+    rev: v3.1.0
     hooks:
       - id: pyupgrade
         args: ["--py37-plus"]
