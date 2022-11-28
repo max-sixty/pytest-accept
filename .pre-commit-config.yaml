@@ -1,7 +1,7 @@
 # @max-sixty's standard set
 repos:
   - repo: https://github.com/PyCQA/autoflake
-    rev: "v1.7.7"
+    rev: "v2.0.0"
     hooks:
       - id: autoflake
   - repo: https://github.com/PyCQA/isort
@@ -9,7 +9,7 @@ repos:
     hooks:
       - id: isort
   - repo: https://github.com/PyCQA/flake8
-    rev: "5.0.4"
+    rev: "6.0.0"
     hooks:
       - id: flake8
         additional_dependencies: [pep8-naming==0.12.1]
@@ -38,7 +38,7 @@ repos:
   #     - id: markdown-link-check
   #       files: \.md$
   - repo: https://github.com/pre-commit/pre-commit-hooks
-    rev: v4.3.0
+    rev: v4.4.0
     hooks:
       - id: trailing-whitespace
       - id: end-of-file-fixer
