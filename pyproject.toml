@@ -1,11 +1,11 @@
 [tool.poetry]
-name = "pytest-accept"
-description = "A pytest-plugin for updating doctest outputs"
-repository = "https://github.com/max-sixty/pytest-accept"
-homepage = "https://github.com/max-sixty/pytest-accept"
-readme = "README.md"
-license = "Apache-2.0"
 authors = ["Maximilian Roos <m@maxroos.com>"]
+description = "A pytest-plugin for updating doctest outputs"
+homepage = "https://github.com/max-sixty/pytest-accept"
+license = "Apache-2.0"
+name = "pytest-accept"
+readme = "README.md"
+repository = "https://github.com/max-sixty/pytest-accept"
 # Defined by poetry-dynamic-versioning
 version = "0"
 
@@ -23,36 +23,36 @@ format-jinja = "{% if distance == 0 %}{{ base }}{% else %}{{ base }}.dev{{ dista
 accept = "pytest_accept"
 
 [tool.poetry.dependencies]
-python = ">=3.8, <3.11"
 pytest = ">=6, <8"
+python = ">=3.8"
 
 [tool.poetry.dev-dependencies]
 astor = "^0.8.1"
 # Keep versions of these five up to date with .pre-commit-config.yaml
 black = "^21.7b0"
+blackdoc = "^0.3.4"
 flake8 = "3.9.2"
 isort = "5.8.0"
 mypy = "^0.910"
-blackdoc = "^0.3.4"
 pre-commit = "^2.14.0"
 # Currently causing Windows to break on 3.10
 # pdbpp = "^0.10.3"
 
 [tool.isort]
+default_section = "THIRDPARTY"
+float_to_top = true
+known_first_party = ["pytest-accept"]
 profile = "black"
 skip_gitignore = true
-default_section = "THIRDPARTY"
-known_first_party = ["pytest-accept"]
-float_to_top = true
 
 [tool.pytest.ini_options]
-pytester_example_dir = "examples"
 addopts = "--doctest-modules"
 doctest_optionflags = "NORMALIZE_WHITESPACE IGNORE_EXCEPTION_DETAIL ELLIPSIS"
+pytester_example_dir = "examples"
 testpaths = [
-    "pytest_accept"
+  "pytest_accept",
 ]
 
 [build-system]
-requires = ["poetry-core>=1.0.2", "poetry-dynamic-versioning"]
 build-backend = "poetry.core.masonry.api"
+requires = ["poetry-core>=1.0.2", "poetry-dynamic-versioning"]
