@@ -24,7 +24,7 @@ accept = "pytest_accept"
 
 [tool.poetry.dependencies]
 pytest = ">=6, <8"
-python = ">=3.8"
+python = ">=3.8, <4"
 
 [tool.poetry.dev-dependencies]
 astor = "^0.8.1"
