@@ -1,6 +1,6 @@
 # pytest-accept
 
-[![GitHub Workflow CI Status](https://img.shields.io/github/workflow/status/max-sixty/pytest-accept/Test?logo=github&style=for-the-badge)](https://github.com/max-sixty/pytest-accept/actions?query=workflow:test)
+[![GitHub Workflow CI Status](https://img.shields.io/github/actions/workflow/status/max-sixty/pytest-accept/test.yaml?branch=main&logo=github&style=for-the-badge)](https://github.com/max-sixty/pytest-accept/actions?query=workflow:test)
 [![PyPI Version](https://img.shields.io/pypi/v/pytest-accept?style=for-the-badge)](https://pypi.python.org/pypi/pytest-accept/)
 [![GitHub License](https://img.shields.io/github/license/max-sixty/pytest-accept?style=for-the-badge)](https://github.com/max-sixty/pytest-accept/blob/main/LICENSE)
 
