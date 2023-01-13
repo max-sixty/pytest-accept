@@ -31,8 +31,6 @@ astor = "^0.8.1"
 # Keep versions of these five up to date with .pre-commit-config.yaml
 black = "^21.7b0"
 blackdoc = "^0.3.4"
-flake8 = "3.9.2"
-isort = "5.8.0"
 mypy = "^0.910"
 pre-commit = "^2.14.0"
 # Currently causing Windows to break on 3.10
@@ -56,3 +54,13 @@ testpaths = [
 [build-system]
 build-backend = "poetry.core.masonry.api"
 requires = ["poetry-core>=1.0.2", "poetry-dynamic-versioning"]
+
+[tool.ruff]
+fix = true
+ignore = [
+  # ignores from `flak8`, though possbily ruff doesn't enforce those that
+  # conflict with black?
+  "E402", # module level import at top — too strict in some cases
+  "E501", # line too long - defer to `black`
+  "E731", # No lambdas — too strict
+]
