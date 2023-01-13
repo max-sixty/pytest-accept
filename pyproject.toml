@@ -58,7 +58,7 @@ requires = ["poetry-core>=1.0.2", "poetry-dynamic-versioning"]
 [tool.ruff]
 fix = true
 ignore = [
-  # ignores from `flak8`, though possbily ruff doesn't enforce those that
+  # ignores from `flak8`, though possibly ruff doesn't enforce those that
   # conflict with black?
   "E402", # module level import at top — too strict in some cases
   "E501", # line too long - defer to `black`
