@@ -8,14 +8,14 @@ pytest-accept is a pytest plugin for automatically updating doctest outputs. It
 runs doctests, observes the generated outputs, and writes them to the doctests'
 documented outputs.
 
-It's designed for a couple of use cases:
+It's designed for a couple of audiences:
 
-- People who work with doctests and don't enjoy manually copying generated
-  outputs from the pytest error log and pasting them into their doctests'
-  documented outputs. pytest-accept does the copying & pasting for you.
-- People who generally find writing tests a bit annoying, and prefer to develop
-  by "running the code and seeing whether it works". This library aims to make
-  testing a joyful part of that development loop.
+- Folks who work with doctests, and don't enjoy manually copying & pasting
+  outputs from the pytest error log to their doctests' documented outputs.
+  pytest-accept does the copying & pasting for you.
+- Folks who generally find writing any tests a bit annoying, and prefer to
+  develop by "running the code and seeing if it works". This library aims to
+  make testing a joyful part of that development loop.
 
 pytest-accept is decoupled from the doctests it works with — it can be used with
 existing doctests, and the doctests it edits are no different from normal
@@ -76,8 +76,8 @@ good support in python.
 Confusingly, it's referred to "snapshot testing" or "regression testing" or
 "expect testing" or "literate testing" or "acceptance testing". The best
 explanation I've seen on this testing style is from
-**[@yminsky](https://github.com/yminsky)** in a [Jane Street
-Blogpost](https://blog.janestreet.com/testing-with-expectations/).
+**[@yminsky](https://github.com/yminsky)** in a
+[Jane Street Blogpost](https://blog.janestreet.com/testing-with-expectations/).
 **[@matklad](https://github.com/matklad)** also has an excellent summary in his
 blog post [How to Test](https://matklad.github.io//2021/05/31/how-to-test.html).
 
@@ -87,7 +87,7 @@ blog post [How to Test](https://matklad.github.io//2021/05/31/how-to-test.html).
 pip install pytest-accept
 ```
 
-## What about normal tests?
+## What about pytest tests?
 
 A previous effort in [**`assert_plugin.py`**](pytest_accept/assert_plugin.py)
 attempted to do this for `assert` statements, and the file contains some notes
@@ -95,8 +95,8 @@ on the effort. The biggest problem is pytest stops on the first `assert` failure
 in each test, which is very limiting. (Whereas pytest can be configured to
 continue on doctest failures, which this library takes advantage of.)
 
-It's [probably possible to change pytest's
-behavior](https://mail.python.org/pipermail/pytest-dev/2020-March/004918.html)
+It's
+[probably possible to change pytest's behavior](https://mail.python.org/pipermail/pytest-dev/2020-March/004918.html)
 here, but it's a significant effort on the pytest codebase.
 
 Some alternatives:
@@ -124,27 +124,28 @@ Nothing ground-breaking! Some notes:
   as the escape character rather than the literal. Use a raw string to have it
   interpreted as a literal. e.g. this fails:
 
-    ```python
-    def raw_string():
-        """
-        >>> "\n"
-        '\n'
-        """
-    ```
+  ```python
+  def raw_string():
+      """
+      >>> "\n"
+      '\n'
+      """
+  ```
 
-    but succeeds with:
+  but succeeds with:
 
-    ```diff
-    def raw_string():
-    -    """
-    +    r"""
-        >>> "\n"
-        '\n'
-     ```
+  ```diff
+  def raw_string():
+  -    """
+  +    r"""
+      >>> "\n"
+      '\n'
+  ```
 
   Possibly pytest-accept could do more here — e.g. change the format of the
   docstring. But that would not be trivial to implement, and may be too
   invasive.
+
 - The library attempts to confirm the file hasn't changed between the start and
   end of the test and won't overwrite the file where it detects there's been a
   change. This can be helpful for workflows where the tests run repeatedly in
