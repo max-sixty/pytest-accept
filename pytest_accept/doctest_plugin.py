@@ -165,7 +165,6 @@ def pytest_sessionfinish(session, exitstatus):
         return
 
     for path, failures in failed_doctests.items():
-
         # Check if the file has changed since the start of the test.
         current_hash = hash(path.read_bytes())
         if path not in file_hashes:
@@ -187,7 +186,6 @@ def pytest_sessionfinish(session, exitstatus):
         original = list(path.read_text(encoding="utf-8").splitlines())
         path = path.with_suffix(".py.new") if passed_accept_copy else path
         with path.open("w+", encoding="utf-8") as file:
-
             # TODO: is there cleaner way of doing this interleaving?
 
             first_failure = failures[0]
@@ -196,7 +194,6 @@ def pytest_sessionfinish(session, exitstatus):
                 print(line, file=file)
 
             for current, next in zip_longest(failures, failures[1:]):
-
                 snapshot_result = _to_doctest_format(current.got)
                 indented = textwrap.indent(
                     snapshot_result, prefix=" " * current.example.indent
