@@ -131,12 +131,10 @@ recent_failure: List[Tuple] = []
 
 
 def pytest_assertrepr_compare(config, op, left, right):
-
     recent_failure.append((op, left, right))
 
 
 def pytest_sessionfinish(session, exitstatus):
-
     for path, new_asserts in asts_modified.items():
         original = list(open(path).readlines())
         # sort by line number
