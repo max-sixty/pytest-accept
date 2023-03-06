@@ -1,7 +1,7 @@
 # @max-sixty's standard set
 repos:
   - repo: https://github.com/charliermarsh/ruff-pre-commit
-    rev: v0.0.252
+    rev: v0.0.254
     hooks:
       - id: ruff
   - repo: https://github.com/pre-commit/mirrors-mypy
@@ -32,20 +32,20 @@ repos:
       - id: debug-statements
       - id: mixed-line-ending
   - repo: https://github.com/python-poetry/poetry
-    rev: 1.3.0
+    rev: 1.4.0
     hooks:
       - id: poetry-lock
         # https://github.com/python-poetry/poetry/issues/7029
         args: ["--check"]
   - repo: https://github.com/pre-commit/mirrors-prettier
-    rev: v3.0.0-alpha.4
+    rev: v3.0.0-alpha.6
     hooks:
       - id: prettier
         additional_dependencies:
           - prettier
           - prettier-plugin-go-template
   - repo: https://github.com/crate-ci/typos
-    rev: v1.13.12
+    rev: v1.13.18
     hooks:
       - id: typos
         # https://github.com/crate-ci/typos/issues/347
