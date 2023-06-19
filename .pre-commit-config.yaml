@@ -45,7 +45,7 @@ repos:
           - prettier
           - prettier-plugin-go-template
   - repo: https://github.com/crate-ci/typos
-    rev: v1.15.0
+    rev: typos-dict-v0.10.1
     hooks:
       - id: typos
         # https://github.com/crate-ci/typos/issues/347
