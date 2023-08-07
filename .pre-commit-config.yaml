@@ -1,7 +1,7 @@
 # @max-sixty's standard set
 repos:
   - repo: https://github.com/astral-sh/ruff-pre-commit
-    rev: v0.0.280
+    rev: v0.0.282
     hooks:
       - id: ruff
   - repo: https://github.com/pre-commit/mirrors-mypy
@@ -38,14 +38,14 @@ repos:
         # https://github.com/python-poetry/poetry/issues/7029
         args: ["--check"]
   - repo: https://github.com/pre-commit/mirrors-prettier
-    rev: v3.0.0
+    rev: v3.0.1
     hooks:
       - id: prettier
         additional_dependencies:
           - prettier
           - prettier-plugin-go-template
   - repo: https://github.com/crate-ci/typos
-    rev: v1.16.1
+    rev: typos-dict-v0.10.8
     hooks:
       - id: typos
         # https://github.com/crate-ci/typos/issues/347
