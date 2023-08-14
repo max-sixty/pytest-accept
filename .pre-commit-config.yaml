@@ -1,11 +1,11 @@
 # @max-sixty's standard set
 repos:
   - repo: https://github.com/astral-sh/ruff-pre-commit
-    rev: v0.0.282
+    rev: v0.0.284
     hooks:
       - id: ruff
   - repo: https://github.com/pre-commit/mirrors-mypy
-    rev: v1.4.1
+    rev: v1.5.0
     hooks:
       - id: mypy
   - repo: https://github.com/keewis/blackdoc
@@ -45,7 +45,7 @@ repos:
           - prettier
           - prettier-plugin-go-template
   - repo: https://github.com/crate-ci/typos
-    rev: typos-dict-v0.10.8
+    rev: v1.16.5
     hooks:
       - id: typos
         # https://github.com/crate-ci/typos/issues/347
