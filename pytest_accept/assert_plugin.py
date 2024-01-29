@@ -73,7 +73,6 @@ index c704339..697e266 100644
   we can make it one.
 """
 
-
 import ast
 import copy
 import logging
