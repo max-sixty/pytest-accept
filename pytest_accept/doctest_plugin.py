@@ -89,8 +89,9 @@ def pytest_configure(config):
 
 def _to_doctest_format(output: str) -> str:
     """
+    Convert a string into a doctest format.
 
-    This passes the doctest because it has `<BLANKLINE>`s in the correct place.
+    For example, this requires `<BLANKLINE>`s:
     >>> print(
     ...     '''
     ... hello
@@ -103,9 +104,8 @@ def _to_doctest_format(output: str) -> str:
     <BLANKLINE>
     world
 
-    We can also use a test to confirm this is what the function creates (but we have to
-    add a prefix, or it'll treat it as an actual blank line! Maybe this is pushing
-    doctests too far!):
+    Here, we have a doctest confirming this behavior (but we have to add a prefix, or
+    it'll treat it as an actual blank line! Maybe this is pushing doctests too far!):
     >>> for line in _to_doctest_format(
     ...     '''
     ... hello
