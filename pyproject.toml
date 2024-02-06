@@ -23,7 +23,7 @@ format-jinja = "{% if distance == 0 %}{{ base }}{% else %}{{ base }}.dev{{ dista
 accept = "pytest_accept"
 
 [tool.poetry.dependencies]
-pytest = ">=6, <8"
+pytest = ">=6"
 python = ">=3.8, <4"
 
 [tool.poetry.dev-dependencies]
