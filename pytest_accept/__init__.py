@@ -10,9 +10,9 @@ from .doctest_plugin import (
 # this package is installed.
 
 __all__ = [
-    pytest_runtest_makereport,
-    pytest_sessionfinish,
-    pytest_addoption,
-    pytest_configure,
-    pytest_collect_file,
+    "pytest_runtest_makereport",
+    "pytest_sessionfinish",
+    "pytest_addoption",
+    "pytest_configure",
+    "pytest_collect_file",
 ]
