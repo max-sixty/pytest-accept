@@ -67,5 +67,6 @@ ignore = [
 ]
 
 [tool.mypy]
+files = "."
 # TODO: ideally we would list the modules that aren't yet typed
 ignore_missing_imports = true
