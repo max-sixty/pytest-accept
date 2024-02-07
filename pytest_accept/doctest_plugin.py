@@ -189,7 +189,19 @@ def pytest_sessionfinish(session, exitstatus):
             # TODO: is there cleaner way of doing this interleaving?
 
             first_failure = failures[0]
+            print(f"\n{first_failure=}\n")
+            print(f"\n{first_failure.test.lineno=}")
+            print(f"\n{first_failure.example.lineno=}")
+            print(f"\n{first_failure.example.source=}")
+
+            print(f"\n{first_failure.example.want=}")
+            print(f"\n{first_failure.example.source=}")
+            # print(f"\n{first_failure.got=}")
+            # print(f"\n{first_failure.args=}")
+            print(f"\n{first_failure.test.docstring=}")
+            # print(f"\n{first_failure.test.globs=}")
             start_line = _snapshot_start_line(first_failure)
+            print(f"{start_line=}")
             for line in original[:start_line]:
                 print(line, file=file)
 
@@ -204,7 +216,11 @@ def pytest_sessionfinish(session, exitstatus):
                 current_finish_line = _snapshot_start_line(current) + len(
                     current.example.want.splitlines()
                 )
+                print(f"{_snapshot_start_line(current)=}")
+                print(f"{len(current.example.want.splitlines())=}")
+                print(f"{current_finish_line=}")
                 next_start_line = _snapshot_start_line(next) if next else len(original)
+                print(f"{next_start_line=}")
 
                 for line in original[current_finish_line:next_start_line]:
                     print(line, file=file)
