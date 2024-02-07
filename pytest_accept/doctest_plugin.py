@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import logging
 import re
 import textwrap
@@ -6,7 +8,6 @@ from collections import defaultdict
 from doctest import DocTestFailure
 from itertools import zip_longest
 from pathlib import Path
-from typing import Dict, List
 
 import pytest
 from _pytest.doctest import DoctestItem, MultipleDoctestFailures
@@ -20,11 +21,11 @@ logger = logging.getLogger(__name__)
 # that pytest reports and the line numbers of the mutated file in subsequent tests. An
 # alternative is a static with the updated file, but that seems even heavier.
 
-# Dict of {path: list of (location, new code)}
-failed_doctests: Dict[Path, List[DocTestFailure]] = defaultdict(list)
+# dict of {path: list of (location, new code)}
+failed_doctests: dict[Path, list[DocTestFailure]] = defaultdict(list)
 
-# Dict of filename to hashes, so we don't overwrite a changed file
-file_hashes: Dict[Path, int] = {}
+# dict of filename to hashes, so we don't overwrite a changed file
+file_hashes: dict[Path, int] = {}
 
 
 def pytest_collect_file(path, parent):
@@ -57,7 +58,9 @@ def pytest_runtest_makereport(item, call):
     return outcome.get_result()
 
 
-def _snapshot_start_line(failure):
+def _snapshot_start_line(failure: DocTestFailure) -> int:
+
+    assert failure.test.lineno is not None
     return (
         failure.test.lineno
         + failure.example.lineno
