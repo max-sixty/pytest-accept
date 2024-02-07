@@ -1,5 +1,8 @@
 """
-Unsurprisingly, these tests are in the form of doctests.
+These tests are in the form of doctests.
+
+On reflection, that was a bit ambitious, particularly for new contributors, and so new
+tests could be written in a more standard form of pytest tests.
 """
 
 
