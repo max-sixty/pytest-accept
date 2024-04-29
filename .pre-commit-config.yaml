@@ -1,11 +1,11 @@
 # @max-sixty's standard set
 repos:
   - repo: https://github.com/astral-sh/ruff-pre-commit
-    rev: v0.4.1
+    rev: v0.4.2
     hooks:
       - id: ruff
   - repo: https://github.com/pre-commit/mirrors-mypy
-    rev: v1.9.0
+    rev: v1.10.0
     hooks:
       - id: mypy
   - repo: https://github.com/keewis/blackdoc
@@ -14,7 +14,7 @@ repos:
       - id: blackdoc
   # black should go at the end, since it's the most likely to change others' changes.
   - repo: https://github.com/psf/black
-    rev: "24.4.0"
+    rev: "24.4.2"
     hooks:
       - id: black
   # This doesn't seem to work from pre-commit.ci; which may not have internet access
@@ -43,7 +43,7 @@ repos:
           - prettier
           - prettier-plugin-go-template
   - repo: https://github.com/crate-ci/typos
-    rev: v1.20.9
+    rev: v1.20.10
     hooks:
       - id: typos
         # https://github.com/crate-ci/typos/issues/347
