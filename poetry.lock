@@ -476,7 +476,6 @@ files = [
 [package.dependencies]
 markdown-it-py = ">=2.2.0"
 pygments = ">=2.13.0,<3.0.0"
-typing-extensions = {version = ">=4.0.0,<5.0", markers = "python_version < \"3.9\""}
 
 [package.extras]
 jupyter = ["ipywidgets (>=7.5.1,<9)"]
@@ -566,5 +565,5 @@ test = ["covdefaults (>=2.3)", "coverage (>=7.2.7)", "coverage-enable-subprocess
 
 [metadata]
 lock-version = "2.0"
-python-versions = ">=3.8, <4"
-content-hash = "2431baa7673fc99a7d28f5da8798982986f67bed903a79e33f0aba42f400d85b"
+python-versions = ">=3.9, <4"
+content-hash = "17e965d5a167c4890976796c2768a325f391003bd21ef37e06373258dff736b0"
