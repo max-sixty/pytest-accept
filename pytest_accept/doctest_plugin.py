@@ -28,12 +28,11 @@ failed_doctests: dict[Path, list[DocTestFailure]] = defaultdict(list)
 file_hashes: dict[Path, int] = {}
 
 
-def pytest_collect_file(path, parent):
+def pytest_collect_file(file_path, parent):
     """
     Store the hash of the file so we can check if it changed later
     """
-    path = Path(path)
-    file_hashes[path] = hash(path.read_bytes())
+    file_hashes[file_path] = hash(file_path.read_bytes())
 
 
 @pytest.hookimpl(hookwrapper=True, tryfirst=True)
