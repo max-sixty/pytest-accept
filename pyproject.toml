@@ -23,7 +23,7 @@ format-jinja = "{% if distance == 0 %}{{ base }}{% else %}{{ base }}.dev{{ dista
 accept = "pytest_accept"
 
 [tool.poetry.dependencies]
-pytest = ">=6"
+pytest = ">=7"
 python = ">=3.8, <4"
 
 [tool.poetry.group.dev.dependencies]
@@ -45,8 +45,11 @@ profile = "black"
 skip_gitignore = true
 
 [tool.pytest.ini_options]
-addopts = "--doctest-modules"
+addopts = ["--strict-config", "--strict-markers", "--doctest-modules"]
 doctest_optionflags = "NORMALIZE_WHITESPACE IGNORE_EXCEPTION_DETAIL ELLIPSIS"
+filterwarnings = [
+  "error:::pytest_accept.*",
+]
 pytester_example_dir = "examples"
 testpaths = [
   "pytest_accept",
@@ -58,12 +61,22 @@ requires = ["poetry-core>=1.0.2", "poetry-dynamic-versioning"]
 
 [tool.ruff]
 fix = true
+
+[tool.ruff.lint]
 ignore = [
   # ignores from `flak8`, though possibly ruff doesn't enforce those that
   # conflict with black?
   "E402", # module level import at top — too strict in some cases
   "E501", # line too long - defer to `black`
   "E731", # No lambdas — too strict
+]
+select = [
+  "F", # Pyflakes
+  "E", # Pycodestyle
+  "W",
+  "TID", # flake8-tidy-imports (absolute imports)
+  "I", # isort
+  "UP", # Pyupgrade
 ]
 
 [tool.mypy]
