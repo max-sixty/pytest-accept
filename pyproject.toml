@@ -24,7 +24,7 @@ accept = "pytest_accept"
 
 [tool.poetry.dependencies]
 pytest = ">=7"
-python = ">=3.8, <4"
+python = ">=3.9, <4"
 
 [tool.poetry.group.dev.dependencies]
 astor = "^0.8.1"
@@ -36,13 +36,6 @@ pre-commit = "^2.14.0"
 ruff = "^0.6.4"
 # Currently causing Windows to break on 3.10
 # pdbpp = "^0.10.3"
-
-[tool.isort]
-default_section = "THIRDPARTY"
-float_to_top = true
-known_first_party = ["pytest-accept"]
-profile = "black"
-skip_gitignore = true
 
 [tool.pytest.ini_options]
 addopts = ["--strict-config", "--strict-markers", "--doctest-modules"]
