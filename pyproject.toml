@@ -33,7 +33,7 @@ black = ">=21.7,<25.0"
 blackdoc = "^0.3.4"
 mypy = "^1.8"
 pre-commit = "^2.14.0"
-ruff = "^0.2.1"
+ruff = "^0.6.4"
 # Currently causing Windows to break on 3.10
 # pdbpp = "^0.10.3"
 
