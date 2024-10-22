@@ -6,7 +6,7 @@ Docstrings with line continuation characters should be handled correctly.
 def add(x, y):
     """
     Adds two \
-        values.
+    values.
 
     >>> add(1, 1)
     3
