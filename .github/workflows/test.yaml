@@ -22,6 +22,6 @@ jobs:
         with:
           python-version: ${{ matrix.python-version }}
       # https://github.com/abatilo/actions-poetry/issues/72
-      - uses: abatilo/actions-poetry@v2
+      - uses: abatilo/actions-poetry@v3
       - run: poetry install
       - run: poetry run pytest

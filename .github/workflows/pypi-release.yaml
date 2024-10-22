@@ -19,7 +19,7 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: 3.8
-      - uses: abatilo/actions-poetry@v3.0.0
+      - uses: abatilo/actions-poetry@v3
         with:
           poetry-version: 1.2.0
       - run: poetry self add "poetry-dynamic-versioning[plugin]"
