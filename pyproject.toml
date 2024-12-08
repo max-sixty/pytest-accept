@@ -29,24 +29,19 @@ python = ">=3.9, <4"
 [tool.poetry.group.dev.dependencies]
 astor = "^0.8.1"
 # Keep versions of these five up to date with .pre-commit-config.yaml
-black = ">=21.7,<25.0"
 blackdoc = "^0.3.4"
 mypy = "^1.8"
-pre-commit = "^2.14.0"
-ruff = "^0.6.4"
+pre-commit = "^4"
+ruff = "^0.8"
 # Currently causing Windows to break on 3.10
 # pdbpp = "^0.10.3"
 
 [tool.pytest.ini_options]
 addopts = ["--strict-config", "--strict-markers", "--doctest-modules"]
 doctest_optionflags = "NORMALIZE_WHITESPACE IGNORE_EXCEPTION_DETAIL ELLIPSIS"
-filterwarnings = [
-  "error:::pytest_accept.*",
-]
+filterwarnings = ["error:::pytest_accept.*"]
 pytester_example_dir = "examples"
-testpaths = [
-  "pytest_accept",
-]
+testpaths = ["pytest_accept"]
 
 [build-system]
 build-backend = "poetry.core.masonry.api"
@@ -64,12 +59,12 @@ ignore = [
   "E731", # No lambdas — too strict
 ]
 select = [
-  "F", # Pyflakes
-  "E", # Pycodestyle
+  "F",   # Pyflakes
+  "E",   # Pycodestyle
   "W",
   "TID", # flake8-tidy-imports (absolute imports)
-  "I", # isort
-  "UP", # Pyupgrade
+  "I",   # isort
+  "UP",  # Pyupgrade
 ]
 
 [tool.mypy]
