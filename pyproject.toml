@@ -1,3 +1,14 @@
+# We still use poetry officially, but gradually switching to uv. So the next two
+# sections are only partially "active". When `uv` gets dependabot, we'll make
+# the full transition.
+[project]
+name = "pytest-accept"
+dependencies = ["astor>=0.8.1", "pytest>=7"]
+requires-python = ">=3.9, <4"
+
+[dependency-groups]
+dev = ["astor", "blackdoc", "mypy", "pre-commit", "ruff"]
+
 [tool.poetry]
 authors = ["Maximilian Roos <m@maxroos.com>"]
 description = "A pytest-plugin for updating doctest outputs"
