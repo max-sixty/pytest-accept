@@ -190,14 +190,19 @@ def pytest_sessionfinish(session, exitstatus):
             # TODO: is there cleaner way of doing this interleaving?
 
             first_failure = failures[0]
-            start_line = _snapshot_start_line(first_failure)
-            for line in original[:start_line]:
+            next_start_line = _snapshot_start_line(first_failure)
+            for line in original[:next_start_line]:
                 print(line, file=file)
 
             for current, next in zip_longest(failures, failures[1:]):
+                # Note that `current.example.indent` no longer works in python 3.13,
+                # since docstrings are now dedented. So we calculate it from the source.
+                existing_indent = len(
+                    re.match(r" *", original[next_start_line]).group()
+                )
                 snapshot_result = _to_doctest_format(current.got)
                 indented = textwrap.indent(
-                    snapshot_result, prefix=" " * current.example.indent
+                    snapshot_result, prefix=" " * existing_indent
                 )
                 for line in indented.splitlines():
                     print(line, file=file)
