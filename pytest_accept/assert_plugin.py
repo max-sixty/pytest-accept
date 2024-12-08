@@ -77,7 +77,6 @@ import ast
 import copy
 import logging
 from collections import defaultdict
-from typing import Dict, List, Tuple
 
 import astor
 import pytest
@@ -85,7 +84,7 @@ import pytest
 logger = logging.getLogger(__name__)
 
 # Dict of {path: list of (location, new code)}
-asts_modified: Dict[str, List[Tuple[slice, str]]] = defaultdict(list)
+asts_modified: dict[str, list[tuple[slice, str]]] = defaultdict(list)
 
 OVERWRITE = False
 
@@ -126,7 +125,7 @@ def pytest_runtest_makereport(item, call):
     return outcome.get_result()
 
 
-recent_failure: List[Tuple] = []
+recent_failure: list[tuple] = []
 
 
 def pytest_assertrepr_compare(config, op, left, right):

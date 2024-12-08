@@ -1,22 +1,18 @@
 # @max-sixty's standard set
 repos:
   - repo: https://github.com/astral-sh/ruff-pre-commit
-    rev: v0.6.9
+    rev: v0.8.2
     hooks:
+      - id: ruff-format
       - id: ruff
   - repo: https://github.com/pre-commit/mirrors-mypy
-    rev: v1.11.2
+    rev: v1.13.0
     hooks:
       - id: mypy
   - repo: https://github.com/keewis/blackdoc
     rev: v0.3.9
     hooks:
       - id: blackdoc
-  # black should go at the end, since it's the most likely to change others' changes.
-  - repo: https://github.com/psf/black
-    rev: "24.10.0"
-    hooks:
-      - id: black
   # This doesn't seem to work from pre-commit.ci; which may not have internet access
   # - repo: https://github.com/ComPWA/mirrors-markdown-link-check
   #   rev: v3.8.7
@@ -43,7 +39,7 @@ repos:
           - prettier
           - prettier-plugin-go-template
   - repo: https://github.com/crate-ci/typos
-    rev: v1.26.0
+    rev: typos-dict-v0.11.37
     hooks:
       - id: typos
         # https://github.com/crate-ci/typos/issues/347

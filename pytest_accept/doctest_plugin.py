@@ -58,7 +58,6 @@ def pytest_runtest_makereport(item, call):
 
 
 def _snapshot_start_line(failure: DocTestFailure) -> int:
-
     assert failure.test.lineno is not None
     return (
         failure.test.lineno
