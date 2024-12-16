@@ -1,7 +1,7 @@
 # @max-sixty's standard set
 repos:
   - repo: https://github.com/astral-sh/ruff-pre-commit
-    rev: v0.8.2
+    rev: v0.8.3
     hooks:
       - id: ruff-format
       - id: ruff
@@ -39,7 +39,7 @@ repos:
           - prettier
           - prettier-plugin-go-template
   - repo: https://github.com/crate-ci/typos
-    rev: typos-dict-v0.11.37
+    rev: v1.28.3
     hooks:
       - id: typos
         # https://github.com/crate-ci/typos/issues/347
