@@ -3,20 +3,19 @@
 # the full transition.
 [project]
 name = "pytest-accept"
+description = "A pytest-plugin for updating doctest outputs"
 dependencies = ["astor>=0.8.1", "pytest>=7"]
 requires-python = ">=3.9, <4"
+authors = [{ name = "Maximilian Roos", email = "m@maxroos.com" }]
+license = "Apache-2.0"
+readme = "README.md"
+dynamic = ["version"]
+urls = { homepage = "https://github.com/max-sixty/pytest-accept", repository = "https://github.com/max-sixty/pytest-accept" }
 
 [dependency-groups]
 dev = ["astor", "blackdoc", "mypy", "pre-commit", "ruff"]
 
 [tool.poetry]
-authors = ["Maximilian Roos <m@maxroos.com>"]
-description = "A pytest-plugin for updating doctest outputs"
-homepage = "https://github.com/max-sixty/pytest-accept"
-license = "Apache-2.0"
-name = "pytest-accept"
-readme = "README.md"
-repository = "https://github.com/max-sixty/pytest-accept"
 # Defined by poetry-dynamic-versioning
 version = "0"
 
@@ -30,7 +29,7 @@ format-jinja = "{% if distance == 0 %}{{ base }}{% else %}{{ base }}.dev{{ dista
 
 # format = "{base}.{distance}"
 
-[tool.poetry.plugins."pytest11"]
+[project.entry-points."pytest11"]
 accept = "pytest_accept"
 
 [tool.poetry.dependencies]
