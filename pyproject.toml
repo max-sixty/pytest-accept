@@ -2,15 +2,15 @@
 # sections are only partially "active". When `uv` gets dependabot, we'll make
 # the full transition.
 [project]
-name = "pytest-accept"
-description = "A pytest-plugin for updating doctest outputs"
+authors = [{name = "Maximilian Roos", email = "m@maxroos.com"}]
 dependencies = ["astor>=0.8.1", "pytest>=7"]
-requires-python = ">=3.9, <4"
-authors = [{ name = "Maximilian Roos", email = "m@maxroos.com" }]
-license = "Apache-2.0"
-readme = "README.md"
+description = "A pytest-plugin for updating doctest outputs"
 dynamic = ["version"]
-urls = { homepage = "https://github.com/max-sixty/pytest-accept", repository = "https://github.com/max-sixty/pytest-accept" }
+license = "Apache-2.0"
+name = "pytest-accept"
+readme = "README.md"
+requires-python = ">=3.9, <4"
+urls = {homepage = "https://github.com/max-sixty/pytest-accept", repository = "https://github.com/max-sixty/pytest-accept"}
 
 [dependency-groups]
 dev = ["astor", "blackdoc", "mypy", "pre-commit", "ruff"]
@@ -69,12 +69,12 @@ ignore = [
   "E731", # No lambdas — too strict
 ]
 select = [
-  "F",   # Pyflakes
-  "E",   # Pycodestyle
+  "F", # Pyflakes
+  "E", # Pycodestyle
   "W",
   "TID", # flake8-tidy-imports (absolute imports)
-  "I",   # isort
-  "UP",  # Pyupgrade
+  "I", # isort
+  "UP", # Pyupgrade
 ]
 
 [tool.mypy]
