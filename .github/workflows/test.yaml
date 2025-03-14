@@ -21,7 +21,13 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: ${{ matrix.python-version }}
-      # https://github.com/abatilo/actions-poetry/issues/72
-      - uses: abatilo/actions-poetry@v4
-      - run: poetry install
-      - run: poetry run pytest
+      - name: Install uv
+        run: |
+          pip install uv
+      - name: Install dependencies with uv
+        run: |
+          uv venv
+          uv sync
+      - name: Run tests
+        run: |
+          uv run pytest
