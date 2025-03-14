@@ -33,6 +33,7 @@ fix = true
 [tool.ruff.lint]
 ignore = [
   "E402", # module level import at top — too strict in some cases
+  "E501", # line too long - defer to formatter
   "E731", # No lambdas — too strict
 ]
 select = [
