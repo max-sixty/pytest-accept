@@ -22,8 +22,9 @@ jobs:
           pip install uv
       - name: Build package
         run: |
-          uv pip install build setuptools-scm
-          python -m build
+          uv venv
+          uv pip install setuptools-scm
+          uv build
       - name: Publish to TestPyPI
         run: |
           uv publish --token ${{ secrets.PYPI_TEST_TOKEN }} --publish-url https://test.pypi.org/legacy/

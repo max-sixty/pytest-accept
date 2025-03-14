@@ -24,8 +24,9 @@ jobs:
           pip install uv
       - name: Build package
         run: |
-          uv pip install build setuptools-scm
-          python -m build
+          uv venv
+          uv pip install setuptools-scm
+          uv build
       - name: Publish to PyPI
         run: |
           uv publish --token ${{ secrets.PYPI_TOKEN }}
