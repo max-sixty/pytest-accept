@@ -25,7 +25,6 @@ jobs:
       - name: Build package
         run: |
           uv venv
-          uv pip install setuptools-scm
           uv build
       - name: Publish to PyPI
         run: |
