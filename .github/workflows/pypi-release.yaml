@@ -18,15 +18,14 @@ jobs:
           fetch-depth: 0
       - uses: actions/setup-python@v5
         with:
-          python-version: 3.8
-      - uses: abatilo/actions-poetry@v4
-        with:
-          poetry-version: 1.2.0
-      - run: poetry self add "poetry-dynamic-versioning[plugin]"
-      - run: poetry config pypi-token.pypi ${{ secrets.PYPI_TOKEN }}
-      - run: poetry publish --build
-      # Can't use this because of poetry-dynamic-versioning
-      # - name: Build and publish to pypi
-      #   uses: JRubics/poetry-publish@v1.6
-      #   with:
-      #     pypi_token: ${{ secrets.PYPI_TOKEN }}
+          python-version: 3.9
+      - name: Install uv
+        run: |
+          pip install uv
+      - name: Build package
+        run: |
+          uv venv
+          uv build
+      - name: Publish to PyPI
+        run: |
+          uv publish --token ${{ secrets.PYPI_TOKEN }}
