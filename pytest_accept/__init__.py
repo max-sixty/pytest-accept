@@ -1,3 +1,10 @@
+from importlib.metadata import PackageNotFoundError, version
+
+try:
+    __version__ = version("pytest-accept")
+except PackageNotFoundError:
+    __version__ = "unknown"
+
 from .doctest_plugin import (
     pytest_addoption,
     pytest_collect_file,
@@ -6,10 +13,11 @@ from .doctest_plugin import (
     pytest_sessionfinish,
 )
 
-# Note that pluginsn need to be listed here in order for pytest to pick them up when
+# Note that plugins need to be listed here in order for pytest to pick them up when
 # this package is installed.
 
 __all__ = [
+    "__version__",
     "pytest_runtest_makereport",
     "pytest_sessionfinish",
     "pytest_addoption",

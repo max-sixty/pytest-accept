@@ -312,6 +312,7 @@ wheels = [
 
 [[package]]
 name = "pytest-accept"
+version = "0.1.13"
 source = { editable = "." }
 dependencies = [
     { name = "astor" },
