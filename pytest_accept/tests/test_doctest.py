@@ -58,20 +58,15 @@ def add_example():
     ...
 
     >>> result = pytester.runpytest("--doctest-modules", "--accept")
-    ===... test session starts ...===...
-    platform ... -- Python ..., pytest-..., pluggy-...
-    rootdir: ...
-    plugins: accept-...
+    ============================= test session starts ==============================
+    platform darwin -- Python 3.11.13, pytest-8.3.5, pluggy-1.5.0
+    rootdir: /private/var/folders/wf/s6ycxvvs4ln8qsdbfx40hnc40000gn/T/pytest-of-maximilian/pytest-4801/pytest_accept.tests.test_doctest.add_example0
+    plugins: accept-0.1.13.dev30
     collected 1 item
     <BLANKLINE>
-    add.py ...                                                               ...[100%]
+    add.py .                                                                 [100%]
     <BLANKLINE>
-    ===... warnings summary ...===...
-    ...PytestAssertRewriteWarning: Module already imported so cannot be rewritten: pytest_accept
-    ...
-    <BLANKLINE>
-    -- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
-    ===... 1 passed, 1 warning in ... ...===...
+    ============================== 1 passed in 0.00s ===============================
 
     """
 

@@ -2,9 +2,9 @@
 authors = [{ name = "Maximilian Roos", email = "m@maxroos.com" }]
 dependencies = ["astor>=0.8.1", "pytest>=7"]
 requires-python = ">=3.9, <4"
-license = { text = "Apache-2.0" }
+license = "Apache-2.0"
 readme = "README.md"
-dynamic = ["version"]
+version = "0.1.13"
 name = "pytest-accept"
 urls = { homepage = "https://github.com/max-sixty/pytest-accept", repository = "https://github.com/max-sixty/pytest-accept" }
 
@@ -21,11 +21,14 @@ filterwarnings = ["error:::pytest_accept.*"]
 pytester_example_dir = "examples"
 testpaths = ["pytest_accept"]
 
-[tool.setuptools_scm]
-fallback_version = "9999"
 
 [build-system]
-requires = ["setuptools>=61.0", "setuptools-scm>=7"]
+requires = ["uv_build>=0.7.19,<0.8.0"]
+build-backend = "uv_build"
+
+[tool.uv.build-backend]
+module-name = "pytest_accept"
+module-root = ""
 
 [tool.ruff]
 fix = true

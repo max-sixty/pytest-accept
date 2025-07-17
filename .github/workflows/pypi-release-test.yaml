@@ -1,29 +1,34 @@
-name: Test release to PyPI
+name: Test Release
 
 on:
   push:
     branches:
       - main
-    # tags:
-    #   - "*"
 
 jobs:
-  release:
+  test-release:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-      - uses: actions/setup-python@v5
-        with:
-          python-version: 3.9
+
       - name: Install uv
+        uses: astral-sh/setup-uv@v4
+
+      - name: Generate test version
         run: |
-          pip install uv
-      - name: Build package
+          # Get current version from pyproject.toml
+          VERSION=$(grep -E "^version = " pyproject.toml | cut -d'"' -f2)
+          # Create a test version with timestamp (PyPI compatible)
+          TEST_VERSION="${VERSION}.dev$(date +%Y%m%d%H%M%S)"
+          echo "TEST_VERSION=$TEST_VERSION" >> $GITHUB_ENV
+          # Update version in pyproject.toml
+          sed -i "s/^version = .*/version = \"$TEST_VERSION\"/" pyproject.toml
+
+      - name: Build with test version
         run: |
-          uv venv
+          uv python install 3.13
           uv build
+
       - name: Publish to TestPyPI
         run: |
           uv publish --token ${{ secrets.PYPI_TEST_TOKEN }} --publish-url https://test.pypi.org/legacy/
