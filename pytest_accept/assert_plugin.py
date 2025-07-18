@@ -41,9 +41,6 @@ index c704339..697e266 100644
      assert 2 == 3
 ```
 
-...whether or not it overwrites the original file or creates a new file with a
-`.new` suffix is controlled by the `OVERWRITE` constant in `conftest.py`.
-
 ## Current shortcomings
 
 ### Big ones
@@ -76,53 +73,119 @@ index c704339..697e266 100644
 import ast
 import copy
 import logging
+import sys
 from collections import defaultdict
+from pathlib import Path
 
 import astor
-import pytest
+from _pytest._code.code import ExceptionInfo
+
+from .common import (
+    atomic_write,
+    get_accept_mode,
+    get_target_path,
+    has_file_changed,
+    should_process_accepts,
+    track_file_hash,
+)
 
 logger = logging.getLogger(__name__)
 
 # Dict of {path: list of (location, new code)}
 asts_modified: dict[str, list[tuple[slice, str]]] = defaultdict(list)
 
-OVERWRITE = False
+INTERCEPT_ASSERTIONS = False
+
+_ASSERTION_HANDLER = ast.parse(
+    """
+__import__("pytest_accept").assert_plugin.__handle_failed_assertion()
+"""
+).body
 
 
-@pytest.hookimpl(hookwrapper=True, tryfirst=True)
-def pytest_runtest_makereport(item, call):
-    outcome = yield
+def _patch_assertion_rewriter():
+    # I'm so sorry.
+    # This monkey-patches pytest's private assertion rewriter to wrap all assertions in try-except blocks.
 
-    if not call.excinfo or not isinstance(call.excinfo.value, AssertionError):
+    from _pytest.assertion.rewrite import AssertionRewriter
+
+    old_visit_assert = AssertionRewriter.visit_Assert
+
+    def new_visit_assert(self, assert_):
+        rv = old_visit_assert(self, assert_)
+
+        try_except = ast.Try(
+            body=rv,
+            handlers=[
+                ast.ExceptHandler(
+                    expr=AssertionError,
+                    identifier="__pytest_accept_e",
+                    body=_ASSERTION_HANDLER,
+                )
+            ],
+            orelse=[],
+            finalbody=[],
+        )
+
+        ast.copy_location(try_except, assert_)
+        for node in ast.iter_child_nodes(try_except):
+            ast.copy_location(node, assert_)
+
+        return [try_except]
+
+    AssertionRewriter.visit_Assert = new_visit_assert
+
+
+def __handle_failed_assertion():
+    raw_excinfo = sys.exc_info()
+    if raw_excinfo is None:
+        return
+
+    __handle_failed_assertion_impl(raw_excinfo)
+
+    if not INTERCEPT_ASSERTIONS:
+        raise
+
+
+def __handle_failed_assertion_impl(raw_excinfo):
+    excinfo = ExceptionInfo.from_exc_info(raw_excinfo)
+
+    if not recent_failure:
         return
 
     op, left, _ = recent_failure.pop()
     if op != "==":
-        logger.debug(f"{item.nodeid} does not assert equality, and won't be replaced")
+        logger.debug("does not assert equality, and won't be replaced")
+        return
 
-    tb_entry = call.excinfo.traceback[0]
+    tb_entry = excinfo.traceback[0]
     # not exactly sure why +1, but in tb_entry.__repr__
     line_number_start = tb_entry.lineno + 1
     line_number_end = line_number_start + len(tb_entry.statement.lines) - 1
     original_location = slice(line_number_start, line_number_end)
 
     path = tb_entry.path
-    tree = ast.parse(path.read())
+    with path.open() as f:
+        tree = ast.parse(f.read())
 
     for item in ast.walk(tree):
         if isinstance(item, ast.Assert) and original_location.start == item.lineno:
             # we need to _then_ check that the next compare item's
             # ops[0] is Eq and then replace the comparator[0]
-            assert item.msg is None
-            assert len(item.test.comparators) == 1
-            assert len(item.test.ops) == 1
-            assert isinstance(item.test.ops[0], ast.Eq)
+            try:
+                assert item.msg is None
+                assert len(item.test.comparators) == 1
+                assert len(item.test.ops) == 1
+                assert isinstance(item.test.ops[0], ast.Eq)
+
+                ast.literal_eval(item.test.comparators[0])
+            except Exception:
+                continue
 
             new_assert = copy.copy(item)
             new_assert.test.comparators[0] = ast.Constant(value=left)
 
-    asts_modified[path].append((original_location, new_assert))
-    return outcome.get_result()
+            asts_modified[path].append((original_location, new_assert))
 
 
 recent_failure: list[tuple] = []
@@ -132,26 +195,72 @@ def pytest_assertrepr_compare(config, op, left, right):
     recent_failure.append((op, left, right))
 
 
+def pytest_sessionstart(session):
+    global INTERCEPT_ASSERTIONS
+    # Always intercept assertions when using --accept or --accept-copy
+    INTERCEPT_ASSERTIONS = bool(
+        session.config.getoption("--accept")
+        or session.config.getoption("--accept-copy")
+    )
+
+    # Patch the assertion rewriter if needed
+    if INTERCEPT_ASSERTIONS:
+        _patch_assertion_rewriter()
+
+
+def pytest_collection_modifyitems(session, config, items):
+    """Track file hashes during collection"""
+    if should_process_accepts(session):
+        seen_files = set()
+        for item in items:
+            if hasattr(item, "fspath") and item.fspath not in seen_files:
+                path = Path(item.fspath)
+                if path.exists():
+                    track_file_hash(path)
+                    seen_files.add(item.fspath)
+
+
 def pytest_sessionfinish(session, exitstatus):
+    if not should_process_accepts(session):
+        return
+
+    accept, accept_copy = get_accept_mode(session)
+
     for path, new_asserts in asts_modified.items():
-        original = list(open(path).readlines())
+        path = Path(path)  # Ensure we're working with Path objects
+
+        # Check if the file has changed since the start of the test.
+        if not accept_copy and has_file_changed(path):
+            logger.warning(
+                f"File changed since start of test, not writing results: {path}"
+            )
+            continue
+
+        with open(path) as f:
+            original = list(f.readlines())
         # sort by line number
         new_asserts = sorted(new_asserts, key=lambda x: x[0].start)
 
-        file = open(path + (".new" if not OVERWRITE else ""), "w+")
+        target_path = get_target_path(path, accept_copy)
 
-        for i, line in enumerate(original):
-            line_no = i + 1
-            if not new_asserts:
-                file.write(line)
-            else:
-                location, code = new_asserts[0]
-                if not (location.start <= line_no <= location.stop):
+        def write_content(file):
+            for i, line in enumerate(original):
+                line_no = i + 1
+                if not new_asserts:
                     file.write(line)
-                elif line_no == location.start:
-                    indent = line[: len(line) - len(line.lstrip())]
-                    source = astor.to_source(code).splitlines(keepends=True)
-                    for j in source:
-                        file.write(indent + j)
-                elif line_no == location.stop:
-                    new_asserts.pop(0)
+                else:
+                    location, code = new_asserts[0]
+                    if not (location.start <= line_no <= location.stop):
+                        file.write(line)
+                    elif line_no == location.start:
+                        indent = line[: len(line) - len(line.lstrip())]
+                        source = astor.to_source(code).splitlines(keepends=True)
+                        for j in source:
+                            file.write(indent + j)
+                        # For single-line assertions, pop immediately
+                        if location.start == location.stop:
+                            new_asserts.pop(0)
+                    elif line_no == location.stop:
+                        new_asserts.pop(0)
+
+        atomic_write(target_path, write_content)
