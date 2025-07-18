@@ -3,7 +3,6 @@ from __future__ import annotations
 import logging
 import re
 import textwrap
-import warnings
 from collections import defaultdict
 from doctest import DocTestFailure
 from itertools import zip_longest
@@ -11,6 +10,15 @@ from pathlib import Path
 
 import pytest
 from _pytest.doctest import DoctestItem, MultipleDoctestFailures
+
+from .common import (
+    atomic_write,
+    get_accept_mode,
+    get_target_path,
+    has_file_changed,
+    should_process_accepts,
+    track_file_hash,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -24,15 +32,12 @@ logger = logging.getLogger(__name__)
 # dict of {path: list of (location, new code)}
 failed_doctests: dict[Path, list[DocTestFailure]] = defaultdict(list)
 
-# dict of filename to hashes, so we don't overwrite a changed file
-file_hashes: dict[Path, int] = {}
-
 
 def pytest_collect_file(file_path, parent):
     """
     Store the hash of the file so we can check if it changed later
     """
-    file_hashes[file_path] = hash(file_path.read_bytes())
+    track_file_hash(file_path)
 
 
 @pytest.hookimpl(hookwrapper=True, tryfirst=True)
@@ -160,22 +165,14 @@ def pytest_sessionfinish(session, exitstatus):
 
     assert session.config.option.doctest_continue_on_failure
 
-    passed_accept = session.config.getoption("--accept")
-    passed_accept_copy = session.config.getoption("--accept-copy")
-    if not (passed_accept or passed_accept_copy):
+    if not should_process_accepts(session):
         return
+
+    accept, accept_copy = get_accept_mode(session)
 
     for path, failures in failed_doctests.items():
         # Check if the file has changed since the start of the test.
-        current_hash = hash(path.read_bytes())
-        if path not in file_hashes:
-            warnings.warn(
-                f"{path} not found by pytest-accept as having collected tests "
-                "at the start of the session. Proceeding to overwrite. Please "
-                "report an issue if this occurs unexpectedly. Full path list is "
-                f"{file_hashes}"
-            )
-        elif not passed_accept_copy and current_hash != file_hashes[path]:
+        if not accept_copy and has_file_changed(path):
             logger.warning(
                 f"File changed since start of test, not writing results: {path}"
             )
@@ -185,8 +182,9 @@ def pytest_sessionfinish(session, exitstatus):
         failures = sorted(failures, key=lambda x: x.test.lineno or 0)
 
         original = list(path.read_text(encoding="utf-8").splitlines())
-        path = path.with_suffix(".py.new") if passed_accept_copy else path
-        with path.open("w+", encoding="utf-8") as file:
+        target_path = get_target_path(path, accept_copy)
+
+        def write_content(file):
             # TODO: is there cleaner way of doing this interleaving?
 
             first_failure = failures[0]
@@ -209,3 +207,5 @@ def pytest_sessionfinish(session, exitstatus):
 
                 for line in original[current_finish_line:next_start_line]:
                     print(line, file=file)
+
+        atomic_write(target_path, write_content)
