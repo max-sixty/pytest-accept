@@ -4,6 +4,7 @@ import logging
 import re
 import textwrap
 import warnings
+from collections import defaultdict
 from doctest import DocTestFailure
 from itertools import zip_longest
 from pathlib import Path
@@ -11,7 +12,7 @@ from pathlib import Path
 import pytest
 from _pytest.doctest import DoctestItem, MultipleDoctestFailures
 
-from . import get_failed_doctests, get_file_hashes
+from . import failed_doctests_key, file_hashes_key
 
 logger = logging.getLogger(__name__)
 
@@ -23,7 +24,7 @@ def pytest_collect_file(file_path, parent):
     """
     Store the hash of the file so we can check if it changed later
     """
-    file_hashes = get_file_hashes(parent.session)
+    file_hashes = parent.session.stash.setdefault(file_hashes_key, {})
     file_hashes[file_path] = hash(file_path.read_bytes())
 
 
@@ -35,7 +36,9 @@ def pytest_runtest_makereport(item, call):
     if not isinstance(item, DoctestItem) or not call.excinfo:
         return
 
-    failed_doctests = get_failed_doctests(item.session)
+    failed_doctests = item.session.stash.setdefault(
+        failed_doctests_key, defaultdict(list)
+    )
 
     if isinstance(call.excinfo.value, DocTestFailure):
         failed_doctests[Path(call.excinfo.value.test.filename)].append(
@@ -159,8 +162,8 @@ def pytest_sessionfinish(session, exitstatus):
     if not (passed_accept or passed_accept_copy):
         return
 
-    failed_doctests = get_failed_doctests(session)
-    file_hashes = get_file_hashes(session)
+    failed_doctests = session.stash.setdefault(failed_doctests_key, defaultdict(list))
+    file_hashes = session.stash.setdefault(file_hashes_key, {})
 
     for path, failures in failed_doctests.items():
         # Check if the file has changed since the start of the test.

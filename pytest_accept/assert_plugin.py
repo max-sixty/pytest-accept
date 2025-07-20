@@ -76,11 +76,12 @@ index c704339..697e266 100644
 import ast
 import copy
 import logging
+from collections import defaultdict
 
 import astor
 import pytest
 
-from . import get_asts_modified, recent_failure_key
+from . import asts_modified_key, recent_failure_key
 
 logger = logging.getLogger(__name__)
 
@@ -122,7 +123,7 @@ def pytest_runtest_makereport(item, call):
             new_assert = copy.copy(item)
             new_assert.test.comparators[0] = ast.Constant(value=left)
 
-    asts_modified = get_asts_modified(item.session)
+    asts_modified = item.session.stash.setdefault(asts_modified_key, defaultdict(list))
     asts_modified[path].append((original_location, new_assert))
     return outcome.get_result()
 
@@ -134,7 +135,7 @@ def pytest_assertrepr_compare(config, op, left, right):
 
 
 def pytest_sessionfinish(session, exitstatus):
-    asts_modified = get_asts_modified(session)
+    asts_modified = session.stash.setdefault(asts_modified_key, defaultdict(list))
     for path, new_asserts in asts_modified.items():
         original = list(open(path).readlines())
         # sort by line number
