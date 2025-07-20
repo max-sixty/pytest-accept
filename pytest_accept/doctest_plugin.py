@@ -4,7 +4,6 @@ import logging
 import re
 import textwrap
 import warnings
-from collections import defaultdict
 from doctest import DocTestFailure
 from itertools import zip_longest
 from pathlib import Path
@@ -12,26 +11,19 @@ from pathlib import Path
 import pytest
 from _pytest.doctest import DoctestItem, MultipleDoctestFailures
 
+from . import get_failed_doctests, get_file_hashes
+
 logger = logging.getLogger(__name__)
 
-# TODO: is there a way of tracking failed tests without this static global? I can't find
-# a pytest hook which gives all failures at the end of the test suite. And IIUC we need
-# all the results at a single point after knowing all failures, since mutating the
-# existing file during the test suite will cause a mismatch between the line numbers
-# that pytest reports and the line numbers of the mutated file in subsequent tests. An
-# alternative is a static with the updated file, but that seems even heavier.
-
-# dict of {path: list of (location, new code)}
-failed_doctests: dict[Path, list[DocTestFailure]] = defaultdict(list)
-
-# dict of filename to hashes, so we don't overwrite a changed file
-file_hashes: dict[Path, int] = {}
+# StashKey-based state tracking replaces global dictionaries
+# This provides proper isolation between test sessions and better testability
 
 
 def pytest_collect_file(file_path, parent):
     """
     Store the hash of the file so we can check if it changed later
     """
+    file_hashes = get_file_hashes(parent.session)
     file_hashes[file_path] = hash(file_path.read_bytes())
 
 
@@ -42,6 +34,8 @@ def pytest_runtest_makereport(item, call):
 
     if not isinstance(item, DoctestItem) or not call.excinfo:
         return
+
+    failed_doctests = get_failed_doctests(item.session)
 
     if isinstance(call.excinfo.value, DocTestFailure):
         failed_doctests[Path(call.excinfo.value.test.filename)].append(
@@ -165,6 +159,9 @@ def pytest_sessionfinish(session, exitstatus):
     if not (passed_accept or passed_accept_copy):
         return
 
+    failed_doctests = get_failed_doctests(session)
+    file_hashes = get_file_hashes(session)
+
     for path, failures in failed_doctests.items():
         # Check if the file has changed since the start of the test.
         current_hash = hash(path.read_bytes())
@@ -173,7 +170,7 @@ def pytest_sessionfinish(session, exitstatus):
                 f"{path} not found by pytest-accept as having collected tests "
                 "at the start of the session. Proceeding to overwrite. Please "
                 "report an issue if this occurs unexpectedly. Full path list is "
-                f"{file_hashes}"
+                f"{list(file_hashes.keys())}"
             )
         elif not passed_accept_copy and current_hash != file_hashes[path]:
             logger.warning(
