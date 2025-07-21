@@ -74,17 +74,17 @@ import ast
 import copy
 import logging
 import sys
-from collections import defaultdict
 from pathlib import Path
 
-import astor
 from _pytest._code.code import ExceptionInfo
 
-from . import asts_modified_key, intercept_assertions_key, recent_failure_key
+from . import (
+    Change,
+    file_changes_key,
+    intercept_assertions_key,
+    recent_failure_key,
+)
 from .common import (
-    atomic_write,
-    get_target_path,
-    has_file_changed,
     track_file_hash,
 )
 
@@ -187,10 +187,17 @@ def __handle_failed_assertion_impl(raw_excinfo):
             new_assert = copy.copy(item)
             new_assert.test.comparators[0] = ast.Constant(value=left)
 
-            asts_modified = _current_session.stash.setdefault(
-                asts_modified_key, defaultdict(list)
+            # Submit change to unified change collection
+            file_changes = _current_session.stash.setdefault(file_changes_key, {})
+            if path not in file_changes:
+                file_changes[path] = []
+            file_changes[path].append(
+                Change(
+                    plugin="assert",
+                    data=(original_location, new_assert),
+                    priority=1,  # Assert changes run first
+                )
             )
-            asts_modified[path].append((original_location, new_assert))
 
 
 def pytest_assertrepr_compare(config, op, left, right):
@@ -229,48 +236,4 @@ def pytest_collection_modifyitems(session, config, items):
                     seen_files.add(item.fspath)
 
 
-def pytest_sessionfinish(session, exitstatus):
-    accept = session.config.getoption("--accept")
-    accept_copy = session.config.getoption("--accept-copy")
-    if not (accept or accept_copy):
-        return
-
-    asts_modified = session.stash.setdefault(asts_modified_key, defaultdict(list))
-    for path, new_asserts in asts_modified.items():
-        path = Path(path)  # Ensure we're working with Path objects
-
-        # Check if the file has changed since the start of the test.
-        if not accept_copy and has_file_changed(path, session):
-            logger.warning(
-                f"File changed since start of test, not writing results: {path}"
-            )
-            continue
-
-        with open(path) as f:
-            original = list(f.readlines())
-        # sort by line number
-        new_asserts = sorted(new_asserts, key=lambda x: x[0].start)
-
-        target_path = get_target_path(path, accept_copy)
-
-        def write_content(file):
-            for i, line in enumerate(original):
-                line_no = i + 1
-                if not new_asserts:
-                    file.write(line)
-                else:
-                    location, code = new_asserts[0]
-                    if not (location.start <= line_no <= location.stop):
-                        file.write(line)
-                    elif line_no == location.start:
-                        indent = line[: len(line) - len(line.lstrip())]
-                        source = astor.to_source(code).splitlines(keepends=True)
-                        for j in source:
-                            file.write(indent + j)
-                        # For single-line assertions, pop immediately
-                        if location.start == location.stop:
-                            new_asserts.pop(0)
-                    elif line_no == location.stop:
-                        new_asserts.pop(0)
-
-        atomic_write(target_path, write_content, session)
+# pytest_sessionfinish removed - unified writer handles all file operations

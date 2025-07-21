@@ -2,20 +2,14 @@ from __future__ import annotations
 
 import logging
 import re
-import textwrap
-from collections import defaultdict
 from doctest import DocTestFailure
-from itertools import zip_longest
 from pathlib import Path
 
 import pytest
 from _pytest.doctest import DoctestItem, MultipleDoctestFailures
 
-from . import failed_doctests_key
+from . import Change, file_changes_key
 from .common import (
-    atomic_write,
-    get_target_path,
-    has_file_changed,
     track_file_hash,
 )
 
@@ -40,20 +34,36 @@ def pytest_runtest_makereport(item, call):
     if not isinstance(item, DoctestItem) or not call.excinfo:
         return
 
-    failed_doctests = item.session.stash.setdefault(
-        failed_doctests_key, defaultdict(list)
-    )
+    # Submit failures to unified change collection
+    file_changes = item.session.stash.setdefault(file_changes_key, {})
 
     if isinstance(call.excinfo.value, DocTestFailure):
-        failed_doctests[Path(call.excinfo.value.test.filename)].append(
-            call.excinfo.value
+        failure = call.excinfo.value
+        path = Path(failure.test.filename)
+        if path not in file_changes:
+            file_changes[path] = []
+        file_changes[path].append(
+            Change(
+                plugin="doctest",
+                data=failure,
+                priority=2,  # Doctest changes run after assert changes
+            )
         )
 
     elif isinstance(call.excinfo.value, MultipleDoctestFailures):
         for failure in call.excinfo.value.failures:
             # Don't include tests that fail because of an error setting the test.
             if isinstance(failure, DocTestFailure):
-                failed_doctests[Path(failure.test.filename)].append(failure)
+                path = Path(failure.test.filename)
+                if path not in file_changes:
+                    file_changes[path] = []
+                file_changes[path].append(
+                    Change(
+                        plugin="doctest",
+                        data=failure,
+                        priority=2,  # Doctest changes run after assert changes
+                    )
+                )
 
     return outcome.get_result()
 
@@ -154,66 +164,4 @@ def _redact_volatile(output: str) -> str:
     return temp_paths
 
 
-def pytest_sessionfinish(session, exitstatus):
-    """
-    Write generated doctest results to their appropriate files
-    """
-
-    assert session.config.option.doctest_continue_on_failure
-
-    accept = session.config.getoption("--accept")
-    accept_copy = session.config.getoption("--accept-copy")
-    if not (accept or accept_copy):
-        return
-
-    failed_doctests = session.stash.setdefault(failed_doctests_key, defaultdict(list))
-
-    for path, failures in failed_doctests.items():
-        # Check if the file has changed since the start of the test.
-        if not accept_copy and has_file_changed(path, session):
-            logger.warning(
-                f"File changed since start of test, not writing results: {path}"
-            )
-            continue
-
-        # sort by line number
-        failures = sorted(failures, key=lambda x: x.test.lineno or 0)
-
-        # In --accept-copy mode, if the .new file already exists (from assert plugin),
-        # read from that instead of the original file to preserve assert plugin changes
-        target_path = get_target_path(path, accept_copy)
-
-        # Choose source file: in --accept-copy use .new if it exists,
-        # in --accept mode always use the original (which may have been modified by assert plugin)
-        if accept_copy and target_path.exists():
-            source_path = target_path
-        else:
-            source_path = path
-
-        original = list(source_path.read_text(encoding="utf-8").splitlines())
-
-        def write_content(file):
-            # TODO: is there cleaner way of doing this interleaving?
-
-            first_failure = failures[0]
-            next_start_line = _snapshot_start_line(first_failure)
-            for line in original[:next_start_line]:
-                print(line, file=file)
-
-            for current, next in zip_longest(failures, failures[1:]):
-                # Get the existing indentation from the source line
-                existing_indent = re.match(r"\s*", original[next_start_line]).group()
-                snapshot_result = _to_doctest_format(current.got)
-                indented = textwrap.indent(snapshot_result, prefix=existing_indent)
-                for line in indented.splitlines():
-                    print(line, file=file)
-
-                current_finish_line = _snapshot_start_line(current) + len(
-                    current.example.want.splitlines()
-                )
-                next_start_line = _snapshot_start_line(next) if next else len(original)
-
-                for line in original[current_finish_line:next_start_line]:
-                    print(line, file=file)
-
-        atomic_write(target_path, write_content)
+# pytest_sessionfinish removed - unified writer handles all file operations
