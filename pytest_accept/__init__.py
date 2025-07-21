@@ -70,10 +70,7 @@ def _redact_volatile(output: str) -> str:
 file_changes_key = pytest.StashKey[dict[Path, list[Change]]]()
 file_hashes_key = pytest.StashKey[dict[Path, int]]()
 
-# Legacy StashKeys - will be removed during transition
-failed_doctests_key = pytest.StashKey[dict[Path, list[DocTestFailure]]]()
-files_modified_by_plugins_key = pytest.StashKey[set[Path]]()
-asts_modified_key = pytest.StashKey[dict[str, list[tuple[slice, str]]]]()
+# StashKeys for assertion tracking
 recent_failure_key = pytest.StashKey[list[tuple]]()
 intercept_assertions_key = pytest.StashKey[bool]()
 

@@ -7,13 +7,12 @@ import tempfile
 from pathlib import Path
 from typing import Any, Callable
 
-from . import file_hashes_key, files_modified_by_plugins_key
+from . import file_hashes_key
 
 
 def atomic_write(
     target_path: str | Path,
     writer: Callable[[Any], None],
-    session=None,
     encoding: str = "utf-8",
     suffix: str | None = None,
 ) -> None:
@@ -23,7 +22,6 @@ def atomic_write(
     Args:
         target_path: The final destination path
         writer: A function that takes a file object and writes content
-        session: Pytest session for stash access (optional)
         encoding: Text encoding (default: utf-8)
         suffix: Suffix for temp file (default: uses target file suffix)
     """
@@ -43,13 +41,6 @@ def atomic_write(
 
         # Atomic rename
         os.replace(temp_path, target_path)
-
-        # Mark this file as modified by plugins
-        if session:
-            files_modified_by_plugins = session.stash.setdefault(
-                files_modified_by_plugins_key, set()
-            )
-            files_modified_by_plugins.add(target_path)
 
     except Exception:
         # Clean up temp file on error
@@ -91,16 +82,9 @@ def track_file_hash(path: Path, session) -> None:
 def has_file_changed(path: Path, session) -> bool:
     """Check if a file has changed since it was tracked."""
     file_hashes = session.stash.setdefault(file_hashes_key, {})
-    files_modified_by_plugins = session.stash.setdefault(
-        files_modified_by_plugins_key, set()
-    )
 
     if path not in file_hashes:
         return True  # Unknown file, assume changed for safety
-
-    # If this file was modified by our plugins, don't consider it "changed"
-    if path in files_modified_by_plugins:
-        return False
 
     current_hash = hash(path.read_bytes())
     return current_hash != file_hashes[path]

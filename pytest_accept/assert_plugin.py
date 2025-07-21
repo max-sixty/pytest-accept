@@ -90,6 +90,9 @@ from .common import (
 
 logger = logging.getLogger(__name__)
 
+# Simple global session tracking (much simpler than complex alternatives)
+_current_session = None
+
 # StashKey-based state tracking replaces global dictionaries
 
 _ASSERTION_HANDLER = ast.parse(
@@ -109,6 +112,20 @@ def _patch_assertion_rewriter():
 
     def new_visit_assert(self, assert_):
         rv = old_visit_assert(self, assert_)
+
+        # Add simple safety check - if there are too many AST nodes, skip wrapping
+        # This prevents "too many statically nested blocks" errors in edge cases
+        total_nodes = sum(1 for _ in ast.walk(ast.Module(body=rv)))
+        if total_nodes > 200:  # Higher threshold - only skip for very complex cases
+            # Log warning so user knows this assertion won't be rewritten
+            if hasattr(self, "module_path"):
+                logger.warning(
+                    f"Skipping accept mode for a complex assertion in {self.module_path}. "
+                    f"This assertion will fail normally and won't be auto-corrected. "
+                    f"To fix: simplify the assertion or manually update the expected value."
+                )
+            # Return original without wrapping to avoid "too many nested blocks"
+            return rv
 
         try_except = ast.Try(
             body=rv,
