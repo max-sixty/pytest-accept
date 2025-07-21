@@ -7,11 +7,7 @@ import tempfile
 from pathlib import Path
 from typing import Any, Callable
 
-# Track file hashes to detect changes during test run
-file_hashes: dict[Path, int] = {}
-
-# Track files that have been modified by pytest-accept plugins in this session
-files_modified_by_plugins: set[Path] = set()
+from . import file_hashes_key, files_modified_by_plugins_key
 
 
 def atomic_write(
@@ -47,7 +43,11 @@ def atomic_write(
         os.replace(temp_path, target_path)
 
         # Mark this file as modified by plugins
-        files_modified_by_plugins.add(target_path)
+        if session:
+            files_modified_by_plugins = session.stash.setdefault(
+                files_modified_by_plugins_key, set()
+            )
+            files_modified_by_plugins.add(target_path)
 
     except Exception:
         # Clean up temp file on error
@@ -93,13 +93,19 @@ def get_target_path(
     return source_path
 
 
-def track_file_hash(path: Path) -> None:
+def track_file_hash(path: Path, session) -> None:
     """Store the hash of a file to detect later changes."""
+    file_hashes = session.stash.setdefault(file_hashes_key, {})
     file_hashes[path] = hash(path.read_bytes())
 
 
-def has_file_changed(path: Path) -> bool:
+def has_file_changed(path: Path, session) -> bool:
     """Check if a file has changed since it was tracked."""
+    file_hashes = session.stash.setdefault(file_hashes_key, {})
+    files_modified_by_plugins = session.stash.setdefault(
+        files_modified_by_plugins_key, set()
+    )
+
     if path not in file_hashes:
         return True  # Unknown file, assume changed for safety
 

@@ -89,10 +89,11 @@ from .common import (
     track_file_hash,
 )
 
+from . import asts_modified_key, recent_failure_key
+
 logger = logging.getLogger(__name__)
 
-# Dict of {path: list of (location, new code)}
-asts_modified: dict[str, list[tuple[slice, str]]] = defaultdict(list)
+# StashKey-based state tracking replaces global dictionaries
 
 INTERCEPT_ASSERTIONS = False
 
@@ -153,6 +154,7 @@ def __handle_failed_assertion_impl(raw_excinfo):
     if not recent_failure:
         return
 
+    recent_failure = item.session.config.stash.setdefault(recent_failure_key, [])
     op, left, _ = recent_failure.pop()
     if op != "==":
         logger.debug("does not assert equality, and won't be replaced")
@@ -185,13 +187,15 @@ def __handle_failed_assertion_impl(raw_excinfo):
             new_assert = copy.copy(item)
             new_assert.test.comparators[0] = ast.Constant(value=left)
 
+            asts_modified = _current_session.stash.setdefault(
+                asts_modified_key, defaultdict(list)
+            )
             asts_modified[path].append((original_location, new_assert))
 
 
-recent_failure: list[tuple] = []
-
-
 def pytest_assertrepr_compare(config, op, left, right):
+    # Store in config stash since session might not be available yet
+    recent_failure = config.stash.setdefault(recent_failure_key, [])
     recent_failure.append((op, left, right))
 
 
@@ -216,7 +220,7 @@ def pytest_collection_modifyitems(session, config, items):
             if hasattr(item, "fspath") and item.fspath not in seen_files:
                 path = Path(item.fspath)
                 if path.exists():
-                    track_file_hash(path)
+                    track_file_hash(path, session)
                     seen_files.add(item.fspath)
 
 
@@ -225,12 +229,12 @@ def pytest_sessionfinish(session, exitstatus):
         return
 
     accept, accept_copy = get_accept_mode(session)
-
+    asts_modified = session.stash.setdefault(asts_modified_key, defaultdict(list))
     for path, new_asserts in asts_modified.items():
         path = Path(path)  # Ensure we're working with Path objects
 
         # Check if the file has changed since the start of the test.
-        if not accept_copy and has_file_changed(path):
+        if not accept_copy and has_file_changed(path, session):
             logger.warning(
                 f"File changed since start of test, not writing results: {path}"
             )
@@ -263,4 +267,4 @@ def pytest_sessionfinish(session, exitstatus):
                     elif line_no == location.stop:
                         new_asserts.pop(0)
 
-        atomic_write(target_path, write_content)
+        atomic_write(target_path, write_content, session)
