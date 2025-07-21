@@ -80,6 +80,7 @@ from pathlib import Path
 import astor
 from _pytest._code.code import ExceptionInfo
 
+from . import asts_modified_key, intercept_assertions_key, recent_failure_key
 from .common import (
     atomic_write,
     get_accept_mode,
@@ -88,8 +89,6 @@ from .common import (
     should_process_accepts,
     track_file_hash,
 )
-
-from . import asts_modified_key, intercept_assertions_key, recent_failure_key
 
 logger = logging.getLogger(__name__)
 

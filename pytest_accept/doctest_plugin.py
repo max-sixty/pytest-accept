@@ -11,7 +11,7 @@ from pathlib import Path
 import pytest
 from _pytest.doctest import DoctestItem, MultipleDoctestFailures
 
-from . import failed_doctests_key, file_hashes_key
+from . import failed_doctests_key
 from .common import (
     atomic_write,
     get_accept_mode,
