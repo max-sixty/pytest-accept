@@ -13,6 +13,7 @@ from . import file_hashes_key, files_modified_by_plugins_key
 def atomic_write(
     target_path: str | Path,
     writer: Callable[[Any], None],
+    session=None,
     encoding: str = "utf-8",
     suffix: str | None = None,
 ) -> None:
@@ -22,6 +23,7 @@ def atomic_write(
     Args:
         target_path: The final destination path
         writer: A function that takes a file object and writes content
+        session: Pytest session for stash access (optional)
         encoding: Text encoding (default: utf-8)
         suffix: Suffix for temp file (default: uses target file suffix)
     """

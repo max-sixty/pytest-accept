@@ -89,13 +89,11 @@ from .common import (
     track_file_hash,
 )
 
-from . import asts_modified_key, recent_failure_key
+from . import asts_modified_key, intercept_assertions_key, recent_failure_key
 
 logger = logging.getLogger(__name__)
 
 # StashKey-based state tracking replaces global dictionaries
-
-INTERCEPT_ASSERTIONS = False
 
 _ASSERTION_HANDLER = ast.parse(
     """
@@ -144,17 +142,22 @@ def __handle_failed_assertion():
 
     __handle_failed_assertion_impl(raw_excinfo)
 
-    if not INTERCEPT_ASSERTIONS:
+    if not _current_session or not _current_session.stash.get(
+        intercept_assertions_key, False
+    ):
         raise
 
 
 def __handle_failed_assertion_impl(raw_excinfo):
     excinfo = ExceptionInfo.from_exc_info(raw_excinfo)
 
+    if not _current_session:
+        return
+
+    recent_failure = _current_session.config.stash.setdefault(recent_failure_key, [])
     if not recent_failure:
         return
 
-    recent_failure = item.session.config.stash.setdefault(recent_failure_key, [])
     op, left, _ = recent_failure.pop()
     if op != "==":
         logger.debug("does not assert equality, and won't be replaced")
@@ -200,15 +203,18 @@ def pytest_assertrepr_compare(config, op, left, right):
 
 
 def pytest_sessionstart(session):
-    global INTERCEPT_ASSERTIONS
+    global _current_session
+    _current_session = session
+
     # Always intercept assertions when using --accept or --accept-copy
-    INTERCEPT_ASSERTIONS = bool(
+    intercept_assertions = bool(
         session.config.getoption("--accept")
         or session.config.getoption("--accept-copy")
     )
+    session.stash[intercept_assertions_key] = intercept_assertions
 
     # Patch the assertion rewriter if needed
-    if INTERCEPT_ASSERTIONS:
+    if intercept_assertions:
         _patch_assertion_rewriter()
 
 
