@@ -35,9 +35,7 @@
 - Hash tracking across plugin boundaries
 
 **Simpler approaches to evaluate:**
-- Use file timestamps instead of content hashes
-- Let each plugin write to separate temp files, merge at end
-- Remove inter-plugin coordination entirely (each plugin checks original file only)
+- ??
 
 **Files to change:**
 - `pytest_accept/common.py`: Simplify or remove `files_modified_by_plugins` tracking
