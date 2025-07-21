@@ -10,6 +10,9 @@ from typing import Any, Callable
 # Track file hashes to detect changes during test run
 file_hashes: dict[Path, int] = {}
 
+# Track files that have been modified by pytest-accept plugins in this session
+files_modified_by_plugins: set[Path] = set()
+
 
 def atomic_write(
     target_path: str | Path,
@@ -42,6 +45,9 @@ def atomic_write(
 
         # Atomic rename
         os.replace(temp_path, target_path)
+
+        # Mark this file as modified by plugins
+        files_modified_by_plugins.add(target_path)
 
     except Exception:
         # Clean up temp file on error
@@ -96,5 +102,10 @@ def has_file_changed(path: Path) -> bool:
     """Check if a file has changed since it was tracked."""
     if path not in file_hashes:
         return True  # Unknown file, assume changed for safety
+
+    # If this file was modified by our plugins, don't consider it "changed"
+    if path in files_modified_by_plugins:
+        return False
+
     current_hash = hash(path.read_bytes())
     return current_hash != file_hashes[path]

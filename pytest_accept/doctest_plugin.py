@@ -181,8 +181,18 @@ def pytest_sessionfinish(session, exitstatus):
         # sort by line number
         failures = sorted(failures, key=lambda x: x.test.lineno or 0)
 
-        original = list(path.read_text(encoding="utf-8").splitlines())
+        # In --accept-copy mode, if the .new file already exists (from assert plugin),
+        # read from that instead of the original file to preserve assert plugin changes
         target_path = get_target_path(path, accept_copy)
+
+        # Choose source file: in --accept-copy use .new if it exists,
+        # in --accept mode always use the original (which may have been modified by assert plugin)
+        if accept_copy and target_path.exists():
+            source_path = target_path
+        else:
+            source_path = path
+
+        original = list(source_path.read_text(encoding="utf-8").splitlines())
 
         def write_content(file):
             # TODO: is there cleaner way of doing this interleaving?

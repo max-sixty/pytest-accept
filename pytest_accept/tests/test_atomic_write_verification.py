@@ -11,20 +11,25 @@ def test_temp_files_created_during_write(pytester, monkeypatch):
     temp_files_seen = []
     renames_seen = []
 
-    original_mkstemp = os.open
+    import tempfile
+
+    original_mkstemp = tempfile.mkstemp
     original_replace = os.replace
 
-    def tracking_open(path, flags, *args, **kwargs):
-        result = original_mkstemp(path, flags, *args, **kwargs)
-        if ".tmp_" in str(path):
-            temp_files_seen.append(str(path))
+    def tracking_mkstemp(*args, **kwargs):
+        result = original_mkstemp(*args, **kwargs)
+        temp_path = result[1]  # mkstemp returns (fd, path)
+        if ".tmp_" in str(temp_path):
+            temp_files_seen.append(str(temp_path))
         return result
 
     def tracking_replace(src, dst):
-        renames_seen.append((str(src), str(dst)))
+        # Only track replaces involving our temp files or .new files
+        if ".tmp_" in str(src) or str(dst).endswith(".new"):
+            renames_seen.append((str(src), str(dst)))
         return original_replace(src, dst)
 
-    monkeypatch.setattr("os.open", tracking_open)
+    monkeypatch.setattr("tempfile.mkstemp", tracking_mkstemp)
     monkeypatch.setattr("os.replace", tracking_replace)
     test_contents = """
 def test_atomic():
@@ -134,15 +139,18 @@ def test_fsync():
 def test_doctest_uses_atomic_writes(pytester, monkeypatch):
     """Verify doctest plugin also uses atomic writes"""
     temp_files_seen = []
-    original_mkstemp = os.open
+    import tempfile
 
-    def tracking_open(path, flags, *args, **kwargs):
-        result = original_mkstemp(path, flags, *args, **kwargs)
-        if ".tmp_" in str(path):
-            temp_files_seen.append(str(path))
+    original_mkstemp = tempfile.mkstemp
+
+    def tracking_mkstemp(*args, **kwargs):
+        result = original_mkstemp(*args, **kwargs)
+        temp_path = result[1]  # mkstemp returns (fd, path)
+        if ".tmp_" in str(temp_path):
+            temp_files_seen.append(str(temp_path))
         return result
 
-    monkeypatch.setattr("os.open", tracking_open)
+    monkeypatch.setattr("tempfile.mkstemp", tracking_mkstemp)
     test_contents = '''
 def add(a, b):
     """
