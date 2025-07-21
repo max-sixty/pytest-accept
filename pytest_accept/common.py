@@ -60,19 +60,6 @@ def atomic_write(
         raise
 
 
-def get_accept_mode(session) -> tuple[bool, bool]:
-    """Return (accept, accept_copy) flags from session config."""
-    accept = session.config.getoption("--accept", False)
-    accept_copy = session.config.getoption("--accept-copy", False)
-    return accept, accept_copy
-
-
-def should_process_accepts(session) -> bool:
-    """Check if either accept mode is enabled."""
-    accept, accept_copy = get_accept_mode(session)
-    return accept or accept_copy
-
-
 def get_target_path(
     source_path: str | Path, accept_copy: bool, suffix: str = ".new"
 ) -> Path:

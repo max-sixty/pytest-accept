@@ -83,10 +83,8 @@ from _pytest._code.code import ExceptionInfo
 from . import asts_modified_key, intercept_assertions_key, recent_failure_key
 from .common import (
     atomic_write,
-    get_accept_mode,
     get_target_path,
     has_file_changed,
-    should_process_accepts,
     track_file_hash,
 )
 
@@ -219,7 +217,9 @@ def pytest_sessionstart(session):
 
 def pytest_collection_modifyitems(session, config, items):
     """Track file hashes during collection"""
-    if should_process_accepts(session):
+    if session.config.getoption("--accept") or session.config.getoption(
+        "--accept-copy"
+    ):
         seen_files = set()
         for item in items:
             if hasattr(item, "fspath") and item.fspath not in seen_files:
@@ -230,10 +230,11 @@ def pytest_collection_modifyitems(session, config, items):
 
 
 def pytest_sessionfinish(session, exitstatus):
-    if not should_process_accepts(session):
+    accept = session.config.getoption("--accept")
+    accept_copy = session.config.getoption("--accept-copy")
+    if not (accept or accept_copy):
         return
 
-    accept, accept_copy = get_accept_mode(session)
     asts_modified = session.stash.setdefault(asts_modified_key, defaultdict(list))
     for path, new_asserts in asts_modified.items():
         path = Path(path)  # Ensure we're working with Path objects

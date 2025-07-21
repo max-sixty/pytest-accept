@@ -14,10 +14,8 @@ from _pytest.doctest import DoctestItem, MultipleDoctestFailures
 from . import failed_doctests_key
 from .common import (
     atomic_write,
-    get_accept_mode,
     get_target_path,
     has_file_changed,
-    should_process_accepts,
     track_file_hash,
 )
 
@@ -163,10 +161,11 @@ def pytest_sessionfinish(session, exitstatus):
 
     assert session.config.option.doctest_continue_on_failure
 
-    if not should_process_accepts(session):
+    accept = session.config.getoption("--accept")
+    accept_copy = session.config.getoption("--accept-copy")
+    if not (accept or accept_copy):
         return
 
-    accept, accept_copy = get_accept_mode(session)
     failed_doctests = session.stash.setdefault(failed_doctests_key, defaultdict(list))
 
     for path, failures in failed_doctests.items():

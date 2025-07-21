@@ -44,40 +44,26 @@ from .doctest_plugin import (
     pytest_sessionfinish as doctest_sessionfinish,
 )
 
-
-def pytest_sessionstart(session):
-    """Start both assert and doctest session handlers"""
-    assert_sessionstart(session)
-
-
-def pytest_collection_modifyitems(session, config, items):
-    """Handle collection modification for both plugins"""
-    assert_collection_modifyitems(session, config, items)
+# Direct exports for simple pass-through hooks
+pytest_sessionstart = assert_sessionstart
+pytest_collection_modifyitems = assert_collection_modifyitems
+pytest_assertrepr_compare = assert_assertrepr_compare
 
 
 def pytest_sessionfinish(session, exitstatus):
-    """Finish both assert and doctest session handlers"""
-    # Run both plugins when --accept or --accept-copy is used
-    passed_accept = session.config.getoption("--accept")
-    passed_accept_copy = session.config.getoption("--accept-copy")
-
-    if passed_accept or passed_accept_copy:
+    """Coordinate both plugins: assert first, then doctest"""
+    # Only run when --accept or --accept-copy is used
+    if session.config.getoption("--accept") or session.config.getoption(
+        "--accept-copy"
+    ):
         # Run assert plugin first (it modifies the actual test files)
         assert_sessionfinish(session, exitstatus)
         # Run doctest plugin after (it can then update the doctests in the same files)
         doctest_sessionfinish(session, exitstatus)
 
 
-def pytest_assertrepr_compare(config, op, left, right):
-    """Handle assertion comparison for assert plugin"""
-    # Just pass through to the assert plugin
-    return assert_assertrepr_compare(config, op, left, right)
-
-
-def pytest_addoption(parser):
-    """Add pytest-accept options to pytest"""
-    # The doctest plugin already adds --accept and --accept-copy
-    return doctest_addoption(parser)
+# Direct export for options
+pytest_addoption = doctest_addoption
 
 
 # Export all hooks for pytest to discover
