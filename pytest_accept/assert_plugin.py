@@ -81,10 +81,11 @@ from collections import defaultdict
 import astor
 import pytest
 
+from . import asts_modified_key, recent_failure_key
+
 logger = logging.getLogger(__name__)
 
-# Dict of {path: list of (location, new code)}
-asts_modified: dict[str, list[tuple[slice, str]]] = defaultdict(list)
+# StashKey-based state tracking replaces global dictionaries
 
 OVERWRITE = False
 
@@ -96,6 +97,7 @@ def pytest_runtest_makereport(item, call):
     if not call.excinfo or not isinstance(call.excinfo.value, AssertionError):
         return
 
+    recent_failure = item.session.config.stash.setdefault(recent_failure_key, [])
     op, left, _ = recent_failure.pop()
     if op != "==":
         logger.debug(f"{item.nodeid} does not assert equality, and won't be replaced")
@@ -121,18 +123,19 @@ def pytest_runtest_makereport(item, call):
             new_assert = copy.copy(item)
             new_assert.test.comparators[0] = ast.Constant(value=left)
 
+    asts_modified = item.session.stash.setdefault(asts_modified_key, defaultdict(list))
     asts_modified[path].append((original_location, new_assert))
     return outcome.get_result()
 
 
-recent_failure: list[tuple] = []
-
-
 def pytest_assertrepr_compare(config, op, left, right):
+    # Store in config stash since session might not be available yet
+    recent_failure = config.stash.setdefault(recent_failure_key, [])
     recent_failure.append((op, left, right))
 
 
 def pytest_sessionfinish(session, exitstatus):
+    asts_modified = session.stash.setdefault(asts_modified_key, defaultdict(list))
     for path, new_asserts in asts_modified.items():
         original = list(open(path).readlines())
         # sort by line number

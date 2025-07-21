@@ -1,9 +1,22 @@
+from __future__ import annotations
+
+from doctest import DocTestFailure
 from importlib.metadata import PackageNotFoundError, version
+from pathlib import Path
+
+import pytest
 
 try:
     __version__ = version("pytest-accept")
 except PackageNotFoundError:
     __version__ = "unknown"
+
+# StashKey instances to replace global state
+failed_doctests_key = pytest.StashKey[dict[Path, list[DocTestFailure]]]()
+file_hashes_key = pytest.StashKey[dict[Path, int]]()
+asts_modified_key = pytest.StashKey[dict[str, list[tuple[slice, str]]]]()
+recent_failure_key = pytest.StashKey[list[tuple]]()
+
 
 from .doctest_plugin import (
     pytest_addoption,
