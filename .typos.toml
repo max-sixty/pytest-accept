@@ -1,0 +1,8 @@
+[files]
+# Ignore test output files which contain temporary paths and IDs
+extend-exclude = ["**/tests/**/*.out", "_regtest_outputs/**", "**/_vcr_cassettes/**"]
+
+[default.extend-words]
+# False positives in temporary file names and test output
+# These appear in test outputs as part of randomly generated temp file names
+nin = "nin"  # Part of temp file names like sn-merged-k1on5nin.yaml
