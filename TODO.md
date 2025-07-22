@@ -94,63 +94,64 @@ class Change:
 - `pytest_accept/doctest_plugin.py`: Remove complex file coordination
 - `pytest_accept/assert_plugin.py`: Remove complex file coordination
 
-### 5. Eliminate Complex AST Manipulation Context
+### 5. ✅ COMPLETED: Simplify session parameter threading
 
 **Goal:** Stop threading session context through every function
 
-**Current complexity:**
+**Status:** Partially completed - removed `session` parameter from
+`atomic_write`
 
-- `atomic_write(target_path, writer, session=None)` - session parameter
-  everywhere
-- `track_file_hash(path, session)` - session parameter everywhere
-- `has_file_changed(path, session)` - session parameter everywhere
+**What was done:**
 
-**Simpler approach:**
+- Removed `session` parameter from `atomic_write` function
+- Removed `files_modified_by_plugins_key` usage and tracking
+- Simplified the atomic write logic
 
-- Each pytest hook already receives the session/item/config it needs
-- Stop trying to pass session context to utility functions
-- Inline more logic directly in the hooks where session is naturally available
+**Remaining:**
 
-**Files to change:**
-
-- `pytest_accept/common.py`: Remove session parameters from utilities
-- `pytest_accept/assert_plugin.py`: Handle more logic directly in hooks
-- `pytest_accept/doctest_plugin.py`: Handle more logic directly in hooks
+- `track_file_hash(path, session)` and `has_file_changed(path, session)` still
+  use session parameter
+- These are harder to eliminate as they need access to the session stash for
+  file hash tracking
 
 ## Low Priority
 
-### 6. Consolidate StashKey Definitions
+### 6. ✅ COMPLETED: Remove Legacy StashKeys
 
-**Goal:** Group related StashKeys and reduce total number
+**Goal:** Remove unused StashKeys
 
-**Current keys:**
+**Status:** Completed - removed 3 legacy StashKeys
 
-- `failed_doctests_key`
-- `file_hashes_key`
-- `files_modified_by_plugins_key`
-- `asts_modified_key`
-- `recent_failure_key`
-- `intercept_assertions_key`
+**What was done:**
 
-**Potential consolidation:**
+- Removed `failed_doctests_key` (unused after unified change handling)
+- Removed `files_modified_by_plugins_key` (no longer needed)
+- Removed `asts_modified_key` (unused)
 
-- Combine file-related keys into single `file_state_key`
-- Combine assertion-related keys into single `assertion_state_key`
+**Remaining StashKeys (all necessary):**
 
-### 7. Reduce Plugin Hook Count
+- `file_changes_key` - Stores all file changes from both plugins
+- `file_hashes_key` - Tracks file hashes to detect changes
+- `recent_failure_key` - Tracks assertion comparison data temporarily
+- `intercept_assertions_key` - Boolean flag for whether to intercept assertions
 
-**Goal:** Combine hooks where possible
+**Assessment:** The remaining 4 StashKeys serve distinct purposes and
+consolidating them would reduce code clarity.
 
-**Current hooks per plugin:**
+### 7. Hook Count Assessment (NOT VIABLE)
 
-- Assert plugin: 4 hooks
-- Doctest plugin: 5 hooks
-- Init wrapper: 3 additional hooks
+**Goal:** Reduce plugin hook count by combining hooks
 
-**Consider:**
+**Assessment:** NOT VIABLE - Each hook serves a specific purpose at a different
+phase of pytest's lifecycle:
 
-- Can collection and session hooks be combined?
-- Do we need separate `pytest_sessionstart` and `pytest_sessionfinish`?
+- `pytest_assertrepr_compare` - Called during assertion evaluation
+- `pytest_sessionstart` - Sets up global session and patches AST rewriter
+- `pytest_collection_modifyitems` - Tracks file hashes during collection
+- `pytest_sessionfinish` - Writes all file changes at end
+
+Combining these would break functionality as they need to run at specific times
+in pytest's lifecycle.
 
 ## Notes
 
