@@ -81,7 +81,6 @@ from _pytest._code.code import ExceptionInfo
 from . import (
     AssertChange,
     file_changes_key,
-    intercept_assertions_key,
     recent_failure_key,
     session_ref_key,
 )
@@ -160,11 +159,10 @@ def __handle_failed_assertion():
         if "item" in frame_locals and hasattr(frame_locals["item"], "session"):
             session = frame_locals["item"].session
             __handle_failed_assertion_impl(raw_excinfo, session)
-            if session.stash.get(intercept_assertions_key, False):
-                return
-            break
+            # If we're here, we're in accept mode (otherwise the rewriter wouldn't be patched)
+            return
 
-    # If we couldn't intercept, re-raise
+    # If we couldn't find session, re-raise
     raise
 
 
@@ -231,15 +229,10 @@ def pytest_sessionstart(session):
     # Store session reference in config for access during assertion handling
     session.config.stash[session_ref_key] = session
 
-    # Always intercept assertions when using --accept or --accept-copy
-    intercept_assertions = bool(
-        session.config.getoption("--accept")
-        or session.config.getoption("--accept-copy")
-    )
-    session.stash[intercept_assertions_key] = intercept_assertions
-
-    # Patch the assertion rewriter if needed
-    if intercept_assertions:
+    # Patch the assertion rewriter when using --accept or --accept-copy
+    if session.config.getoption("--accept") or session.config.getoption(
+        "--accept-copy"
+    ):
         _patch_assertion_rewriter()
 
 

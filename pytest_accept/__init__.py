@@ -30,7 +30,6 @@ file_hashes_key = pytest.StashKey[dict[Path, int]]()
 
 # StashKeys for assertion tracking
 recent_failure_key = pytest.StashKey[list[tuple]]()
-intercept_assertions_key = pytest.StashKey[bool]()
 
 # StashKey to store session reference in config for access during assertion handling
 session_ref_key = pytest.StashKey[Any]()  # Actually pytest.Session
