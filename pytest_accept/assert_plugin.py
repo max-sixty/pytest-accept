@@ -80,7 +80,7 @@ import pytest
 from _pytest._code.code import ExceptionInfo
 
 from . import (
-    Change,
+    AssertChange,
     file_changes_key,
     intercept_assertions_key,
     recent_failure_key,
@@ -216,10 +216,10 @@ def __handle_failed_assertion_impl(raw_excinfo, session):
             if path not in file_changes:
                 file_changes[path] = []
             file_changes[path].append(
-                Change(
-                    plugin="assert",
-                    data=(original_location, new_assert),
+                AssertChange(
                     priority=1,  # Assert changes run first
+                    location=original_location,
+                    ast_node=new_assert,
                 )
             )
 

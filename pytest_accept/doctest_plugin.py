@@ -8,7 +8,7 @@ from pathlib import Path
 import pytest
 from _pytest.doctest import DoctestItem, MultipleDoctestFailures
 
-from . import Change, file_changes_key
+from . import DoctestChange, file_changes_key
 from .common import (
     track_file_hash,
 )
@@ -43,10 +43,9 @@ def pytest_runtest_makereport(item, call):
         if path not in file_changes:
             file_changes[path] = []
         file_changes[path].append(
-            Change(
-                plugin="doctest",
-                data=failure,
+            DoctestChange(
                 priority=2,  # Doctest changes run after assert changes
+                failure=failure,
             )
         )
 
@@ -58,10 +57,9 @@ def pytest_runtest_makereport(item, call):
                 if path not in file_changes:
                     file_changes[path] = []
                 file_changes[path].append(
-                    Change(
-                        plugin="doctest",
-                        data=failure,
+                    DoctestChange(
                         priority=2,  # Doctest changes run after assert changes
+                        failure=failure,
                     )
                 )
 

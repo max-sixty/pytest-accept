@@ -19,48 +19,114 @@ except PackageNotFoundError:
     __version__ = "unknown"
 
 
+from abc import ABC, abstractmethod
+
+
 @dataclass
-class Change:
-    """Represents a file change from either assert or doctest plugin"""
+class Change(ABC):
+    """Base class for file changes"""
 
-    plugin: str  # "assert" or "doctest"
-    data: Any  # AST changes or doctest failures
-    priority: int  # assert=1, doctest=2 (assert runs first)
+    priority: int  # Execution order: assert=1, doctest=2
 
+    @property
+    @abstractmethod
+    def kind(self) -> str:
+        """Return the kind of change (e.g., 'assert', 'doctest')"""
+        pass
+
+    @abstractmethod
     def to_dict(self) -> dict:
         """Convert to a serializable dictionary for xdist"""
-        # For assert plugin, data is (location, ast node) - we need to serialize it
-        if self.plugin == "assert":
-            location, ast_node = self.data
-            # Convert AST to source code for serialization
-            import astor
-
-            return {
-                "plugin": self.plugin,
-                "data": {
-                    "location": (location.start, location.stop),
-                    "source": astor.to_source(ast_node).strip(),
-                },
-                "priority": self.priority,
-            }
-        else:
-            # For doctest, we'll handle serialization separately if needed
-            return {"plugin": self.plugin, "data": self.data, "priority": self.priority}
+        pass
 
     @classmethod
     def from_dict(cls, d: dict) -> Change:
-        """Create from a serialized dictionary"""
-        if d["plugin"] == "assert":
-            # Reconstruct AST from source
-            import ast
-
-            ast_node = ast.parse(d["data"]["source"]).body[0]
-            location = slice(d["data"]["location"][0], d["data"]["location"][1])
-            return cls(
-                plugin=d["plugin"], data=(location, ast_node), priority=d["priority"]
-            )
+        """Create appropriate Change subclass from a dictionary"""
+        kind = d["kind"]
+        if kind == "assert":
+            return AssertChange.from_dict(d)
+        elif kind == "doctest":
+            return DoctestChange.from_dict(d)
         else:
-            return cls(plugin=d["plugin"], data=d["data"], priority=d["priority"])
+            raise ValueError(f"Unknown change kind: {kind}")
+
+
+@dataclass
+class AssertChange(Change):
+    """Represents an assertion change"""
+
+    location: slice  # Line range in the file
+    ast_node: Any  # The new AST node
+
+    @property
+    def kind(self) -> str:
+        return "assert"
+
+    def to_dict(self) -> dict:
+        """Convert to a serializable dictionary"""
+        import astor
+
+        return {
+            "kind": self.kind,
+            "priority": self.priority,
+            "location": (self.location.start, self.location.stop),
+            "source": astor.to_source(self.ast_node).strip(),
+        }
+
+    @classmethod
+    def from_dict(cls, d: dict) -> AssertChange:
+        """Reconstruct from dictionary"""
+        import ast
+
+        ast_node = ast.parse(d["source"]).body[0]
+        location = slice(d["location"][0], d["location"][1])
+        return cls(priority=d["priority"], location=location, ast_node=ast_node)
+
+
+@dataclass
+class DoctestChange(Change):
+    """Represents a doctest change"""
+
+    failure: Any  # DocTestFailure object
+
+    @property
+    def kind(self) -> str:
+        return "doctest"
+
+    def to_dict(self) -> dict:
+        """Convert to a serializable dictionary"""
+        return {
+            "kind": self.kind,
+            "priority": self.priority,
+            "test": {
+                "filename": str(self.failure.test.filename),
+                "lineno": self.failure.test.lineno,
+            },
+            "example": {
+                "lineno": self.failure.example.lineno,
+                "source": self.failure.example.source,
+                "want": self.failure.example.want,
+            },
+            "got": self.failure.got,
+        }
+
+    @classmethod
+    def from_dict(cls, d: dict) -> DoctestChange:
+        """Reconstruct from dictionary"""
+        from types import SimpleNamespace
+
+        failure = SimpleNamespace(
+            test=SimpleNamespace(
+                filename=d["test"]["filename"], lineno=d["test"]["lineno"]
+            ),
+            example=SimpleNamespace(
+                lineno=d["example"]["lineno"],
+                source=d["example"]["source"],
+                want=d["example"]["want"],
+            ),
+            got=d["got"],
+        )
+        return cls(priority=d["priority"], failure=failure)
 
 
 logger = logging.getLogger(__name__)
@@ -130,38 +196,36 @@ from .doctest_plugin import (
 
 
 def _apply_assert_changes(
-    original: list[str], assert_changes: list[Change]
+    original: list[str], assert_changes: list[AssertChange]
 ) -> list[str]:
     """Apply assert plugin changes to file content"""
     result = original.copy()
 
-    # Extract assert data and sort by line number
-    assert_data = [
-        (c.data[0], c.data[1]) for c in assert_changes
-    ]  # (location, new_assert)
-    assert_data = sorted(assert_data, key=lambda x: x[0].start)
+    # Sort by line number
+    assert_changes = sorted(assert_changes, key=lambda c: c.location.start)
 
     # Apply changes from end to beginning to avoid line number shifts
-    for location, code in reversed(assert_data):
+    for change in reversed(assert_changes):
         # Replace lines in the location range
-        indent = result[location.start - 1][
-            : len(result[location.start - 1]) - len(result[location.start - 1].lstrip())
+        indent = result[change.location.start - 1][
+            : len(result[change.location.start - 1])
+            - len(result[change.location.start - 1].lstrip())
         ]
-        source = astor.to_source(code).splitlines()
+        source = astor.to_source(change.ast_node).splitlines()
         indented_source = [indent + line for line in source]
 
         # Replace the range of lines
-        result[location.start - 1 : location.stop] = indented_source
+        result[change.location.start - 1 : change.location.stop] = indented_source
 
     return result
 
 
 def _apply_doctest_changes(
-    original: list[str], doctest_changes: list[Change]
+    original: list[str], doctest_changes: list[DoctestChange]
 ) -> list[str]:
     """Apply doctest plugin changes to file content"""
     # Extract failures and sort by line number
-    failures = [c.data for c in doctest_changes]
+    failures = [c.failure for c in doctest_changes]
     failures = sorted(failures, key=lambda x: x.test.lineno or 0)
 
     if not failures:
@@ -295,9 +359,9 @@ def pytest_sessionfinish(session, exitstatus):
         # Sort changes by priority (assert=1, doctest=2)
         changes = sorted(changes, key=lambda x: x.priority)
 
-        # Group changes by plugin type for processing
-        assert_changes = [c for c in changes if c.plugin == "assert"]
-        doctest_changes = [c for c in changes if c.plugin == "doctest"]
+        # Group changes by type for processing
+        assert_changes = [c for c in changes if isinstance(c, AssertChange)]
+        doctest_changes = [c for c in changes if isinstance(c, DoctestChange)]
 
         # Determine target path
         target_path = get_target_path(path, accept_copy)
@@ -335,6 +399,9 @@ pytest_addoption = doctest_addoption
 # Export all hooks for pytest to discover
 __all__ = [
     "__version__",
+    "Change",
+    "AssertChange",
+    "DoctestChange",
     "pytest_runtest_makereport",
     "pytest_sessionfinish",
     "pytest_sessionstart",
