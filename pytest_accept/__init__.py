@@ -3,6 +3,7 @@ from __future__ import annotations
 import logging
 import re
 import textwrap
+from abc import ABC, abstractmethod
 from dataclasses import dataclass
 from doctest import DocTestFailure
 from importlib.metadata import PackageNotFoundError, version
@@ -13,15 +14,29 @@ from typing import Any
 import astor
 import pytest
 
+# Package version
 try:
     __version__ = version("pytest-accept")
 except PackageNotFoundError:
     __version__ = "unknown"
 
+# Logger
+logger = logging.getLogger(__name__)
 
-from abc import ABC, abstractmethod
+# ===== StashKey instances =====
+# Using Any type for forward reference - actual type is dict[Path, list[Change]]
+file_changes_key = pytest.StashKey[Any]()
+file_hashes_key = pytest.StashKey[dict[Path, int]]()
+
+# StashKeys for assertion tracking
+recent_failure_key = pytest.StashKey[list[tuple]]()
+intercept_assertions_key = pytest.StashKey[bool]()
+
+# StashKey to store session reference in config for access during assertion handling
+session_ref_key = pytest.StashKey[Any]()  # Actually pytest.Session
 
 
+# ===== Change Classes =====
 @dataclass
 class Change(ABC):
     """Base class for file changes"""
@@ -129,9 +144,7 @@ class DoctestChange(Change):
         return cls(priority=d["priority"], failure=failure)
 
 
-logger = logging.getLogger(__name__)
-
-
+# ===== Helper Functions =====
 def _snapshot_start_line(failure: DocTestFailure) -> int:
     """Calculate the line where doctest snapshot should start"""
     assert failure.test.lineno is not None
@@ -164,35 +177,6 @@ def _redact_volatile(output: str) -> str:
     mem_locations = re.sub(r" 0x[0-9a-fA-F]+", " 0x...", output)
     temp_paths = re.sub(r"/tmp/[0-9a-fA-F]+", "/tmp/...", mem_locations)
     return temp_paths
-
-
-# StashKey instances to replace global state
-# Unified change collection - replaces separate plugin stashes
-file_changes_key = pytest.StashKey[dict[Path, list[Change]]]()
-file_hashes_key = pytest.StashKey[dict[Path, int]]()
-
-# StashKeys for assertion tracking
-recent_failure_key = pytest.StashKey[list[tuple]]()
-intercept_assertions_key = pytest.StashKey[bool]()
-
-# Import hooks from both plugins
-from .assert_plugin import (
-    pytest_assertrepr_compare as assert_assertrepr_compare,
-)
-from .assert_plugin import (
-    pytest_collection_modifyitems as assert_collection_modifyitems,
-)
-from .assert_plugin import (
-    pytest_sessionstart as assert_sessionstart,
-)
-from .common import atomic_write, get_target_path, has_file_changed
-from .doctest_plugin import (
-    pytest_addoption as doctest_addoption,
-)
-from .doctest_plugin import (
-    pytest_collect_file,
-    pytest_runtest_makereport,
-)
 
 
 def _apply_assert_changes(
@@ -258,12 +242,33 @@ def _apply_doctest_changes(
     return result
 
 
+# ===== Import hooks from submodules =====
+from .assert_plugin import (
+    pytest_assertrepr_compare as assert_assertrepr_compare,
+)
+from .assert_plugin import (
+    pytest_collection_modifyitems as assert_collection_modifyitems,
+)
+from .assert_plugin import (
+    pytest_sessionstart as assert_sessionstart,
+)
+from .common import atomic_write, get_target_path, has_file_changed
+from .doctest_plugin import (
+    pytest_addoption as doctest_addoption,
+)
+from .doctest_plugin import (
+    pytest_collect_file,
+    pytest_runtest_makereport,
+)
+
 # Direct exports for simple pass-through hooks
 pytest_sessionstart = assert_sessionstart
 pytest_collection_modifyitems = assert_collection_modifyitems
 pytest_assertrepr_compare = assert_assertrepr_compare
+pytest_addoption = doctest_addoption
 
 
+# ===== Plugin Hooks =====
 def pytest_configure(config):
     """Initialize plugin configuration"""
     # Call the doctest configure
@@ -392,11 +397,7 @@ def pytest_sessionfinish(session, exitstatus):
         atomic_write(target_path, write_unified_content)
 
 
-# Direct export for options
-pytest_addoption = doctest_addoption
-
-
-# Export all hooks for pytest to discover
+# ===== Exports =====
 __all__ = [
     "__version__",
     "Change",

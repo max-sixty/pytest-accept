@@ -76,7 +76,6 @@ import logging
 import sys
 from pathlib import Path
 
-import pytest
 from _pytest._code.code import ExceptionInfo
 
 from . import (
@@ -84,18 +83,14 @@ from . import (
     file_changes_key,
     intercept_assertions_key,
     recent_failure_key,
+    session_ref_key,
 )
-from .common import (
-    track_file_hash,
-)
+from .common import track_file_hash
 
+# Logger
 logger = logging.getLogger(__name__)
 
-# StashKey to store session reference in config for access during assertion handling
-session_ref_key = pytest.StashKey["pytest.Session"]()
-
-# StashKey-based state tracking replaces global dictionaries
-
+# ===== Constants =====
 _ASSERTION_HANDLER = ast.parse(
     """
 __import__("pytest_accept").assert_plugin.__handle_failed_assertion()
@@ -103,6 +98,7 @@ __import__("pytest_accept").assert_plugin.__handle_failed_assertion()
 ).body
 
 
+# ===== Private Functions =====
 def _patch_assertion_rewriter():
     # I'm so sorry.
     # This monkey-patches pytest's private assertion rewriter to wrap all assertions in try-except blocks.
@@ -224,6 +220,7 @@ def __handle_failed_assertion_impl(raw_excinfo, session):
             )
 
 
+# ===== Plugin Hooks =====
 def pytest_assertrepr_compare(config, op, left, right):
     # Store in config stash since session might not be available yet
     recent_failure = config.stash.setdefault(recent_failure_key, [])
@@ -261,4 +258,4 @@ def pytest_collection_modifyitems(session, config, items):
                     seen_files.add(item.fspath)
 
 
-# pytest_sessionfinish removed - unified writer handles all file operations
+# Note: pytest_sessionfinish removed - unified writer handles all file operations
