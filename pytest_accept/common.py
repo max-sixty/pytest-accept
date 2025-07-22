@@ -64,12 +64,8 @@ def get_target_path(
     """
     source_path = Path(source_path)
     if accept_copy:
-        # For .py files, insert before extension: file.py -> file.py.new
-        # For other files, just append: file.txt -> file.txt.new
-        if source_path.suffix == ".py":
-            return source_path.with_suffix(f".py{suffix}")
-        else:
-            return Path(str(source_path) + suffix)
+        # Always append suffix: file.py -> file.py.new, file.txt -> file.txt.new
+        return Path(str(source_path) + suffix)
     return source_path
 
 
