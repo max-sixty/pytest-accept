@@ -1,3 +1,13 @@
+"""pytest-accept: Automatically update test assertions and doctest outputs.
+
+This plugin uses several private pytest APIs that may change between versions:
+- _pytest.assertion.rewrite.AssertionRewriter: For intercepting assertion failures
+- _pytest._code.code.ExceptionInfo: For processing exception information
+- _pytest.doctest.DoctestItem, MultipleDoctestFailures: For identifying doctest failures
+
+If these APIs are not available, the plugin will disable itself with a warning.
+"""
+
 from __future__ import annotations
 
 import logging
@@ -270,6 +280,31 @@ pytest_addoption = doctest_addoption
 # ===== Plugin Hooks =====
 def pytest_configure(config):
     """Initialize plugin configuration"""
+    # Check if private APIs are available when in accept mode
+    if config.getoption("--accept") or config.getoption("--accept-copy"):
+        try:
+            # Check all required private APIs
+            from _pytest._code.code import ExceptionInfo
+            from _pytest.assertion.rewrite import AssertionRewriter
+            from _pytest.doctest import DoctestItem, MultipleDoctestFailures
+
+            # Verify the specific attributes we need exist
+            if not hasattr(AssertionRewriter, "visit_Assert"):
+                raise AttributeError("AssertionRewriter.visit_Assert not found")
+            if not hasattr(ExceptionInfo, "from_exc_info"):
+                raise AttributeError("ExceptionInfo.from_exc_info not found")
+            # Just check that doctest types exist (imported above)
+            _ = (DoctestItem, MultipleDoctestFailures)
+
+        except (ImportError, AttributeError) as e:
+            # Disable accept mode and warn the user
+            config.option.accept = False
+            config.option.accept_copy = False
+            logger.warning(
+                f"pytest-accept: Disabling --accept mode due to missing pytest internals: {e}. "
+                f"This version of pytest may not be compatible with pytest-accept."
+            )
+
     # Call the doctest configure
     from .doctest_plugin import pytest_configure as doctest_configure
 
