@@ -76,6 +76,7 @@ import logging
 import sys
 from pathlib import Path
 
+import pytest
 from _pytest._code.code import ExceptionInfo
 
 from . import (
@@ -90,8 +91,8 @@ from .common import (
 
 logger = logging.getLogger(__name__)
 
-# Simple global session tracking (much simpler than complex alternatives)
-_current_session = None
+# StashKey to store session reference in config for access during assertion handling
+session_ref_key = pytest.StashKey["pytest.Session"]()
 
 # StashKey-based state tracking replaces global dictionaries
 
@@ -117,7 +118,7 @@ def _patch_assertion_rewriter():
         # This prevents "too many statically nested blocks" errors in edge cases
         total_nodes = sum(1 for _ in ast.walk(ast.Module(body=rv)))
         if total_nodes > 200:  # Higher threshold - only skip for very complex cases
-            # Log warning so user knows this assertion won't be rewritten
+            # module_path is an internal pytest attribute that may not exist in all versions
             if hasattr(self, "module_path"):
                 logger.warning(
                     f"Skipping accept mode for a complex assertion in {self.module_path}. "
@@ -154,21 +155,27 @@ def __handle_failed_assertion():
     if raw_excinfo is None:
         return
 
-    __handle_failed_assertion_impl(raw_excinfo)
+    # Try to get the current test item from the call stack
+    import inspect
 
-    if not _current_session or not _current_session.stash.get(
-        intercept_assertions_key, False
-    ):
-        raise
+    for frame_info in inspect.stack():
+        frame_locals = frame_info.frame.f_locals
+        # Walking up stack frames is inherently uncertain - check if item has session
+        if "item" in frame_locals and hasattr(frame_locals["item"], "session"):
+            session = frame_locals["item"].session
+            __handle_failed_assertion_impl(raw_excinfo, session)
+            if session.stash.get(intercept_assertions_key, False):
+                return
+            break
+
+    # If we couldn't intercept, re-raise
+    raise
 
 
-def __handle_failed_assertion_impl(raw_excinfo):
+def __handle_failed_assertion_impl(raw_excinfo, session):
     excinfo = ExceptionInfo.from_exc_info(raw_excinfo)
 
-    if not _current_session:
-        return
-
-    recent_failure = _current_session.config.stash.setdefault(recent_failure_key, [])
+    recent_failure = session.config.stash.setdefault(recent_failure_key, [])
     if not recent_failure:
         return
 
@@ -205,7 +212,7 @@ def __handle_failed_assertion_impl(raw_excinfo):
             new_assert.test.comparators[0] = ast.Constant(value=left)
 
             # Submit change to unified change collection
-            file_changes = _current_session.stash.setdefault(file_changes_key, {})
+            file_changes = session.stash.setdefault(file_changes_key, {})
             if path not in file_changes:
                 file_changes[path] = []
             file_changes[path].append(
@@ -224,8 +231,8 @@ def pytest_assertrepr_compare(config, op, left, right):
 
 
 def pytest_sessionstart(session):
-    global _current_session
-    _current_session = session
+    # Store session reference in config for access during assertion handling
+    session.config.stash[session_ref_key] = session
 
     # Always intercept assertions when using --accept or --accept-copy
     intercept_assertions = bool(
@@ -246,6 +253,7 @@ def pytest_collection_modifyitems(session, config, items):
     ):
         seen_files = set()
         for item in items:
+            # Different test types (e.g., doctests) may have different attributes
             if hasattr(item, "fspath") and item.fspath not in seen_files:
                 path = Path(item.fspath)
                 if path.exists():

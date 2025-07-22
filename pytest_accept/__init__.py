@@ -27,6 +27,41 @@ class Change:
     data: Any  # AST changes or doctest failures
     priority: int  # assert=1, doctest=2 (assert runs first)
 
+    def to_dict(self) -> dict:
+        """Convert to a serializable dictionary for xdist"""
+        # For assert plugin, data is (location, ast node) - we need to serialize it
+        if self.plugin == "assert":
+            location, ast_node = self.data
+            # Convert AST to source code for serialization
+            import astor
+
+            return {
+                "plugin": self.plugin,
+                "data": {
+                    "location": (location.start, location.stop),
+                    "source": astor.to_source(ast_node).strip(),
+                },
+                "priority": self.priority,
+            }
+        else:
+            # For doctest, we'll handle serialization separately if needed
+            return {"plugin": self.plugin, "data": self.data, "priority": self.priority}
+
+    @classmethod
+    def from_dict(cls, d: dict) -> Change:
+        """Create from a serialized dictionary"""
+        if d["plugin"] == "assert":
+            # Reconstruct AST from source
+            import ast
+
+            ast_node = ast.parse(d["data"]["source"]).body[0]
+            location = slice(d["data"]["location"][0], d["data"]["location"][1])
+            return cls(
+                plugin=d["plugin"], data=(location, ast_node), priority=d["priority"]
+            )
+        else:
+            return cls(plugin=d["plugin"], data=d["data"], priority=d["priority"])
+
 
 logger = logging.getLogger(__name__)
 
@@ -90,7 +125,6 @@ from .doctest_plugin import (
 )
 from .doctest_plugin import (
     pytest_collect_file,
-    pytest_configure,
     pytest_runtest_makereport,
 )
 
@@ -166,6 +200,55 @@ pytest_collection_modifyitems = assert_collection_modifyitems
 pytest_assertrepr_compare = assert_assertrepr_compare
 
 
+def pytest_configure(config):
+    """Initialize plugin configuration"""
+    # Call the doctest configure
+    from .doctest_plugin import pytest_configure as doctest_configure
+
+    doctest_configure(config)
+
+    # This hook runs on both master and workers, so we need to check
+    # if we're a worker by looking for slaveinput (only exists on workers)
+    if hasattr(config, "slaveinput") and "file_hashes" in config.slaveinput:
+        # Convert string keys back to Path objects
+        serialized_hashes = config.slaveinput["file_hashes"]
+        file_hashes = {
+            Path(path_str): hash_val for path_str, hash_val in serialized_hashes.items()
+        }
+        config.stash[file_hashes_key] = file_hashes
+
+
+def pytest_configure_node(node):
+    """xdist hook - send configuration to workers"""
+    # Send file hashes to workers so they can track changes
+    # node.config.stash should always exist in modern pytest
+    if file_hashes_key in node.config.stash:
+        # Convert Path keys to strings for serialization
+        file_hashes = node.config.stash[file_hashes_key]
+        serializable_hashes = {
+            str(path): hash_val for path, hash_val in file_hashes.items()
+        }
+        node.slaveinput["file_hashes"] = serializable_hashes
+
+
+def pytest_testnodedown(node, error):
+    """xdist hook - collect file changes from finished workers"""
+    # workeroutput may not exist if the worker crashed or didn't report back
+    worker_output = getattr(node, "workeroutput", {})
+    if "file_changes" in worker_output:
+        # node.session is not guaranteed to exist, so use config.stash directly
+        master_changes = node.config.stash.setdefault(file_changes_key, {})
+
+        for path_str, serialized_changes in worker_output["file_changes"].items():
+            path = Path(path_str)
+            if path not in master_changes:
+                master_changes[path] = []
+            # Deserialize the changes
+            for change_dict in serialized_changes:
+                change = Change.from_dict(change_dict)
+                master_changes[path].append(change)
+
+
 def pytest_sessionfinish(session, exitstatus):
     """Unified file writer - handles both assert and doctest changes"""
     # Only run when --accept or --accept-copy is used
@@ -174,12 +257,34 @@ def pytest_sessionfinish(session, exitstatus):
     if not (accept or accept_copy):
         return
 
-    # Get all collected changes
+    # This hook runs on both master and workers
+    # Check if we're a worker by looking for workeroutput (only exists on workers)
+    if hasattr(session.config, "workeroutput"):
+        # We're a worker - collect all changes and send to master
+        file_changes = session.stash.get(file_changes_key, {})
+        if file_changes:
+            # Convert Path objects to strings and serialize Change objects
+            serializable_changes = {}
+            for path, changes in file_changes.items():
+                serializable_changes[str(path)] = [
+                    change.to_dict() for change in changes
+                ]
+            session.config.workeroutput["file_changes"] = serializable_changes
+        return
+
+    # We're the master (or running without xdist) - write all changes
     file_changes = session.stash.get(file_changes_key, {})
+    # Also check config stash in case xdist stored changes there
+    # config.stash always exists in modern pytest
+    if not file_changes:
+        file_changes = session.config.stash.get(file_changes_key, {})
     if not file_changes:
         return
 
-    for path, changes in file_changes.items():
+    for path_key, changes in file_changes.items():
+        # Convert back to Path if needed (from xdist serialization)
+        path = Path(path_key) if isinstance(path_key, str) else path_key
+
         # Check if the file has changed since the start of the test
         if not accept_copy and has_file_changed(path, session):
             logger.warning(
@@ -238,4 +343,6 @@ __all__ = [
     "pytest_collect_file",
     "pytest_assertrepr_compare",
     "pytest_collection_modifyitems",
+    "pytest_configure_node",
+    "pytest_testnodedown",
 ]

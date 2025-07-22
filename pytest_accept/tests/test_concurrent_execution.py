@@ -143,9 +143,19 @@ def test_worker_3():
 
     with open(new_path) as f:
         content = f.read()
-        assert 'assert "worker1" == "worker1"' in content
-        assert 'assert "worker2" == "worker2"' in content
-        assert 'assert "worker3" == "worker3"' in content
+        # Check with both quote styles since AST conversion may change them
+        assert (
+            'assert "worker1" == "worker1"' in content
+            or "assert 'worker1' == 'worker1'" in content
+        )
+        assert (
+            'assert "worker2" == "worker2"' in content
+            or "assert 'worker2' == 'worker2'" in content
+        )
+        assert (
+            'assert "worker3" == "worker3"' in content
+            or "assert 'worker3' == 'worker3'" in content
+        )
 
 
 def test_file_locking_with_concurrent_writes(pytester):
