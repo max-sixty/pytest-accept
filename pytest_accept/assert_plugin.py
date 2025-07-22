@@ -84,7 +84,7 @@ from . import (
     recent_failure_key,
     session_ref_key,
 )
-from .common import track_file_hash
+from .common import is_accept_mode, track_file_hash
 
 # Logger
 logger = logging.getLogger(__name__)
@@ -207,9 +207,7 @@ def __handle_failed_assertion_impl(raw_excinfo, session):
 
             # Submit change to unified change collection
             file_changes = session.stash.setdefault(file_changes_key, {})
-            if path not in file_changes:
-                file_changes[path] = []
-            file_changes[path].append(
+            file_changes.setdefault(path, []).append(
                 AssertChange(
                     priority=1,  # Assert changes run first
                     location=original_location,
@@ -229,18 +227,14 @@ def pytest_sessionstart(session):
     # Store session reference in config for access during assertion handling
     session.config.stash[session_ref_key] = session
 
-    # Patch the assertion rewriter when using --accept or --accept-copy
-    if session.config.getoption("--accept") or session.config.getoption(
-        "--accept-copy"
-    ):
+    # Patch the assertion rewriter when in accept mode
+    if is_accept_mode(session.config):
         _patch_assertion_rewriter()
 
 
 def pytest_collection_modifyitems(session, config, items):
     """Track file hashes during collection"""
-    if session.config.getoption("--accept") or session.config.getoption(
-        "--accept-copy"
-    ):
+    if is_accept_mode(session.config):
         seen_files = set()
         for item in items:
             # Different test types (e.g., doctests) may have different attributes

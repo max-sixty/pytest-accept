@@ -88,3 +88,8 @@ def has_file_changed(path: Path, session) -> bool:
 
     current_hash = hash(path.read_bytes())
     return current_hash != file_hashes[path]
+
+
+def is_accept_mode(config) -> bool:
+    """Check if running in accept mode (--accept or --accept-copy)."""
+    return bool(config.getoption("--accept") or config.getoption("--accept-copy"))

@@ -251,7 +251,7 @@ from .assert_plugin import (
 from .assert_plugin import (
     pytest_sessionstart as assert_sessionstart,
 )
-from .common import atomic_write, get_target_path, has_file_changed
+from .common import atomic_write, get_target_path, has_file_changed, is_accept_mode
 from .doctest_plugin import (
     pytest_addoption as doctest_addoption,
 )
@@ -309,21 +309,19 @@ def pytest_testnodedown(node, error):
 
         for path_str, serialized_changes in worker_output["file_changes"].items():
             path = Path(path_str)
-            if path not in master_changes:
-                master_changes[path] = []
-            # Deserialize the changes
+            # Deserialize and add all changes
             for change_dict in serialized_changes:
                 change = Change.from_dict(change_dict)
-                master_changes[path].append(change)
+                master_changes.setdefault(path, []).append(change)
 
 
 def pytest_sessionfinish(session, exitstatus):
     """Unified file writer - handles both assert and doctest changes"""
-    # Only run when --accept or --accept-copy is used
-    accept = session.config.getoption("--accept")
-    accept_copy = session.config.getoption("--accept-copy")
-    if not (accept or accept_copy):
+    # Only run when in accept mode
+    if not is_accept_mode(session.config):
         return
+
+    accept_copy = session.config.getoption("--accept-copy")
 
     # This hook runs on both master and workers
     # Check if we're a worker by looking for workeroutput (only exists on workers)
@@ -341,11 +339,10 @@ def pytest_sessionfinish(session, exitstatus):
         return
 
     # We're the master (or running without xdist) - write all changes
-    file_changes = session.stash.get(file_changes_key, {})
-    # Also check config stash in case xdist stored changes there
-    # config.stash always exists in modern pytest
-    if not file_changes:
-        file_changes = session.config.stash.get(file_changes_key, {})
+    # Check both stashes - xdist stores in config.stash, non-xdist in session.stash
+    file_changes = session.stash.get(file_changes_key, {}) or session.config.stash.get(
+        file_changes_key, {}
+    )
     if not file_changes:
         return
 

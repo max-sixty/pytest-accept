@@ -40,9 +40,7 @@ def pytest_runtest_makereport(item, call):
     if isinstance(call.excinfo.value, DocTestFailure):
         failure = call.excinfo.value
         path = Path(failure.test.filename)
-        if path not in file_changes:
-            file_changes[path] = []
-        file_changes[path].append(
+        file_changes.setdefault(path, []).append(
             DoctestChange(
                 priority=2,  # Doctest changes run after assert changes
                 failure=failure,
@@ -54,9 +52,7 @@ def pytest_runtest_makereport(item, call):
             # Don't include tests that fail because of an error setting the test.
             if isinstance(failure, DocTestFailure):
                 path = Path(failure.test.filename)
-                if path not in file_changes:
-                    file_changes[path] = []
-                file_changes[path].append(
+                file_changes.setdefault(path, []).append(
                     DoctestChange(
                         priority=2,  # Doctest changes run after assert changes
                         failure=failure,
