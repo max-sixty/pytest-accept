@@ -35,8 +35,6 @@ repos:
           - prettier
           - prettier-plugin-go-template
   - repo: https://github.com/crate-ci/typos
-    rev: v1
+    rev: v1.27.3
     hooks:
       - id: typos
-        # https://github.com/crate-ci/typos/issues/347
-        pass_filenames: false
