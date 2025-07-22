@@ -1,35 +1,14 @@
-# pytest-accept Remaining Testing Gaps
+# pytest-accept TODO
 
-## ✅ Completed (High Priority)
+## Known Issues
 
-1. **Error Handling in Assertion Rewriting** - See `test_assertion_filtering.py`
-2. **File Change Detection During Test Run** - See
-   `test_file_change_detection.py`
-3. **Non-Equality Operators** - See `test_assertion_filtering.py`
-4. **Complex Assertion Messages** - See `test_assertion_filtering.py`
-5. **AST Walking Edge Cases** - Partially covered in
-   `test_assertion_filtering.py`
+### pytest-xdist Compatibility
 
-## ✅ Completed (Medium Priority)
+When running with pytest-xdist (`-n` option), not all assertions are being
+corrected properly. Some assertions may be skipped due to race conditions when
+multiple workers try to modify the same file. The plugin works correctly in
+single-process mode but has issues with concurrent execution.
 
-### 1. Concurrent Test Execution - See `test_concurrent_execution.py`
-
-- Test with pytest-xdist (`-n auto`)
-- Verify no race conditions with global state
-- Check StashKey isolation between workers
-
-### 2. Edge Cases in Doctest Output Formatting - See `test_doctest_formatting.py`
-
-- Test very long lines (>1000 chars) get truncated
-- Test very long outputs (>1000 lines) get shortened
-- Prevents editor crashes
-
-### 3. Multiple Doctest Failures in Same Example - See `test_multiple_doctest_failures.py`
-
-- Test `MultipleDoctestFailures` handling
-- Verify all failures in multi-failure doctest are corrected
-
-## Status
-
-All high and medium priority testing gaps have been successfully implemented
-with comprehensive test coverage.
+Example of the issue:
+- Running `pytest --accept-copy -n 2` may result in only some assertions being corrected
+- The test_concurrent_execution.py tests demonstrate this limitation
