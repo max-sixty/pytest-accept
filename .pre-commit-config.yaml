@@ -1,7 +1,7 @@
 # @max-sixty's standard set
 repos:
   - repo: https://github.com/astral-sh/ruff-pre-commit
-    rev: v0.12.4
+    rev: v0.12.5
     hooks:
       - id: ruff-format
       - id: ruff
@@ -34,6 +34,6 @@ repos:
         additional_dependencies:
           - prettier
   - repo: https://github.com/crate-ci/typos
-    rev: v1.27.3
+    rev: v1
     hooks:
       - id: typos
