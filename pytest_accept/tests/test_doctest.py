@@ -58,15 +58,15 @@ def add_example():
     ...
 
     >>> result = pytester.runpytest("--doctest-modules", "--accept")
-    ============================= test session starts ==============================
+    =====...==== test session starts ====...====
     platform ... -- Python ..., pytest-..., pluggy-...
     rootdir: ...
-    plugins: accept-...
+    plugins: ...
     collected 1 item
     <BLANKLINE>
     add.py .                                                                 [100%]
     <BLANKLINE>
-    ============================== 1 passed in ...s ===============================
+    =====...==== 1 passed in ...s =====...====
 
     """
 
