@@ -4,182 +4,168 @@
 [![PyPI Version](https://img.shields.io/pypi/v/pytest-accept?style=for-the-badge)](https://pypi.python.org/pypi/pytest-accept/)
 [![GitHub License](https://img.shields.io/github/license/max-sixty/pytest-accept?style=for-the-badge)](https://github.com/max-sixty/pytest-accept/blob/main/LICENSE)
 
-pytest-accept is a pytest plugin for automatically updating doctest outputs. It
-runs doctests, observes the generated outputs, and writes them to the doctests'
+pytest-accept is a pytest plugin for automatically updating outputs. It runs
+along with pytest, observes the generated outputs, and writes them to the test's
 documented outputs.
 
-It's designed for a couple of audiences:
-
-- Folks who work with doctests, and don't enjoy manually copying & pasting
-  outputs from the pytest error log to their doctests' documented outputs.
-  pytest-accept does the copying & pasting for you.
-- Folks who generally find writing any tests a bit annoying, and prefer to
-  develop by "running the code and seeing if it works". This library aims to
-  make testing a joyful part of that development loop.
-
-pytest-accept is decoupled from the doctests it works with — it can be used with
-existing doctests, and the doctests it edits are no different from normal
-doctests.
-
-## Jesse, what the?
-
-Here's an example of what pytest-accept does: given a file like
-[**`add.py`**](examples/add.py) containing an incorrect documented output:
+## Before
 
 ```python
-def add(x, y):
+def calculate_total(items, tax_rate):
     """
-    Adds two values.
-
-    >>> add(1, 1)
-    3
-
-    >>> add("ab", "c")
-    'bac'
+    >>> calculate_total([10, 20, 30], 0.1)
+    55
     """
+    subtotal = sum(items)
+    return subtotal + (subtotal * tax_rate)
 
-    return x + y
+
+def test_calculate_total():
+    assert calculate_total([10, 20, 30], 0.1) == 55
+    assert calculate_total([5, 5], 0.2) == 10
 ```
 
-...running doctests using pytest and passing `--accept` replaces the existing
-incorrect values with correct values:
-
-```sh
-pytest --doctest-modules examples/add.py --accept
-```
+## After `pytest --accept`
 
 ```diff
-diff --git a/examples/add.py b/examples/add.py
-index 10a71fd..c2c945f 100644
---- a/examples/add.py
-+++ b/examples/add.py
-@@ -3,10 +3,10 @@ def add(x, y):
-     Adds two values.
+# math_helpers.py
+def calculate_total(items, tax_rate):
+    """
+    >>> calculate_total([10, 20, 30], 0.1)
+-    55
++    66.0
+    """
+    subtotal = sum(items)
+    return subtotal + (subtotal * tax_rate)
 
-     >>> add(1, 1)
--    3
-+    2
-
-     >>> add("ab", "c")
--    'bac'
-+    'abc'
-     """
-
-     return x + y
-
+# test_math_helpers.py
+def test_calculate_total():
+-    assert calculate_total([10, 20, 30], 0.1) == 55
+-    assert calculate_total([5, 5], 0.2) == 10
++    assert calculate_total([10, 20, 30], 0.1) == 66.0
++    assert calculate_total([5, 5], 0.2) == 12.0
 ```
 
-This style of testing is fairly well-developed in some languages, although still
-doesn't receive the attention I think it deserves, and historically hasn't had
-good support in python.
-
-Confusingly, it's referred to "snapshot testing" or "regression testing" or
-"expect testing" or "literate testing" or "acceptance testing". The best
-explanation I've seen on this testing style is from
-**[@yminsky](https://github.com/yminsky)** in a
-[Jane Street Blogpost](https://blog.janestreet.com/testing-with-expectations/).
-**[@matklad](https://github.com/matklad)** also has an excellent summary in his
-blog post [How to Test](https://matklad.github.io//2021/05/31/how-to-test.html).
+pytest-accept is decoupled from the tests it works with — it can be used with
+existing tests, and the tests it edits are no different from normal tests. It
+works with both doctests and normal `assert` statements.
 
 ## Installation
+
+```sh
+uv tool install -U pytest-accept
+```
+
+Or with pip:
 
 ```sh
 pip install pytest-accept
 ```
 
-## What about pytest tests?
+To run, just pass `--accept` to pytest:
 
-A previous effort in [**`assert_plugin.py`**](pytest_accept/assert_plugin.py)
-attempted to do this for `assert` statements, and the file contains some notes
-on the effort. The biggest problem is pytest stops on the first `assert` failure
-in each test, which is very limiting. (Whereas pytest can be configured to
-continue on doctest failures, which this library takes advantage of.)
+```sh
+pytest --accept
+```
 
-It's
-[probably possible to change pytest's behavior](https://mail.python.org/pipermail/pytest-dev/2020-March/004918.html)
-here, but it's a significant effort on the pytest codebase.
+## Why?
 
-Some alternatives:
+- Often it's fairly easy to observe whether something is working by viewing the
+  output it produces.
+- But often output is verbose, and copying and pasting the output into the test
+  is tedious.
+- `pytest-accept` does the copying & pasting for you.
+- Similarly, lots of folks generally find writing any tests a bit annoying, and
+  prefer to develop by "running the code and seeing if it works". This library
+  aims to make testing a joyful part of that development loop.
 
-- Use an existing library like
-  [pytest-regtest](https://gitlab.com/uweschmitt/pytest-regtest), which offers
-  file snapshot testing (i.e. not inline).
-- We could write a specific function / fixture, like `accept(result, "abc")`,
-  similar to frameworks like rust's excellent
-  [insta](https://github.com/mitsuhiko/insta) (which I developed some features
-  for), or [ocaml's ppx_expect](https://github.com/janestreet/ppx_expect).
-  - But this has the disadvantage of coupling the test to the plugin: it's not
-    possible to run tests independently of the plugin, or use the plugin on
-    general `assert` tests. And one of the great elegances of pytest is its
-    deferral to a normal `assert` statement.
-- Some of this testing feels like writing a notebook and testing that.
-  [pytest-notebook](https://github.com/chrisjsewell/pytest-notebook) fully
-  implements this.
+This style of testing is fairly well-developed in some languages, although still
+doesn't receive the attention I think it deserves, and historically hasn't had
+good support in python.
 
-## Anything else?
+The best explanation I've seen on this testing style is from
+**[@yminsky](https://github.com/yminsky)** in a
+[Jane Street Blogpost](https://blog.janestreet.com/testing-with-expectations/).
+**[@matklad](https://github.com/matklad)** also has an excellent summary in his
+blog post [How to Test](https://matklad.github.io//2021/05/31/how-to-test.html).
 
-Nothing ground-breaking! Some notes:
+## How it works
 
-- If a docstring uses escape characters such as `\n`, python will interpret them
-  as the escape character rather than the literal. Use a raw string to have it
-  interpreted as a literal. e.g. this fails:
+pytest-accept:
+
+- Intercepts test failures from both doctests and assert statements
+- Parses the files to understand where the documented values are
+- Updates the documented values to match the generated values
+- Writes everything back atomically
+
+Things to know:
+
+- **Simple comparisons only**: Assert rewriting only works with `==` comparisons
+  against literals or simple expressions
+- **Overwrite by default**: Pass `--accept-copy` to write to `.py.new` files
+  instead.
+
+## What about more complex assertions?
+
+We currently don't support:
+
+- Assertions that compare against non-literal values (e.g.,
+  `assert result == some_variable`)
+- Comparisons besides `==`
+- Assert statements with messages
+
+For more complex test scenarios, consider:
+
+- [pytest-regtest](https://gitlab.com/uweschmitt/pytest-regtest) for file-based
+  testing
+- [syrupy](https://github.com/tophat/syrupy) for snapshot testing
+- [pytest-insta](https://github.com/vberlier/pytest-insta) for insta-style
+  review
+
+<details>
+<summary>Doctest quirks</summary>
+
+Doctests are great for examples, but they have quirks
+
+- Use raw strings for examples with backslashes:
 
   ```python
-  def raw_string():
-      """
-      >>> "\n"
-      '\n'
-      """
+  r"""
+  >>> print("\n")
+  \n
+  """
   ```
 
-  but succeeds with:
+- We handle blank lines automatically:
 
-  ```diff
-  def raw_string():
-  -    """
-  +    r"""
-      >>> "\n"
-      '\n'
+  ```python
+  """
+  >>> print("one\n\ntwo")
+  one
+  <BLANKLINE>
+  two
+  """
   ```
 
-  Possibly pytest-accept could do more here — e.g. change the format of the
-  docstring. But that would not be trivial to implement, and may be too
-  invasive.
+- Really long outputs get truncated so they won't break your editor
 
-- The library attempts to confirm the file hasn't changed between the start and
-  end of the test and won't overwrite the file where it detects there's been a
-  change. This can be helpful for workflows where the tests run repeatedly in
-  the background (e.g. using something like
-  [watchexec](https://github.com/watchexec/watchexec)) while a person is working
-  on the file, or when the tests take a long time, maybe because of `--pdb`. To
-  be doubly careful, passing `--accept-copy` will cause the plugin to instead
-  create a file named `{file}.py.new` rather than overwriting the file on any
-  doctest failure.
-  - It will overwrite the existing documented values, though these aren't
-    generally useful per se — they're designed to match the generated of the
-    code. The only instances they could be useful is where they've been manual
-    curated (e.g. removing volatile outputs like hashes), and in those cases
-    ideally they can be restored from version control. Or as above, pass
-    `--accept-copy` to be conservative.
-- This is still fairly early, has mostly been used by me &
-  [xarray](https://github.com/pydata/xarray/pull/5950#issuecomment-974687406)
-  and there may be some small bugs. Let me know anything at all and I'll attempt
-  to fix them.
-- It currently doesn't affect the printing of test results; the doctests will
-  still print as failures.
-  - TODO: A future version could print something about them being fixed.
-- Python's doctest library is imperfect:
-  - It can't handle indents, and probably other things.
-    - We modify the output to match the doctest format; e.g. with blanklines. If
-      generated output isn't sufficient for the doctest to pass, and there is
-      some form of output that's sufficient, please report as a bug.
-  - The syntax for `.*` is an ellipsis `...`, which is also the syntax for
-    continuing a code line, so the beginning of a line must always be specified.
-  - The syntax for all the directives is arguably less than aesthetically
-    pleasing.
-  - It doesn't have an option for pretty printing, so the test must pretty print
-    itself with `pprint(x)`, which is verbose.
-  - It reports line numbers incorrectly in some cases — two docstring lines
-    separated with continuation character `\` is counted as one, meaning this
-    library will not have access to the correct line number for doctest inputs
-    and outputs.
+</details>
+
+## Prior art
+
+This testing style goes by many names: "snapshot testing", "regression testing",
+"expect testing", "literate testing", or "acceptance testing". Whatever the
+name, the pattern is the same: write tests, see what they produce, accept what's
+correct.
+
+[@matklad](https://github.com/matklad) has an excellent overview in
+[How to Test](https://matklad.github.io//2021/05/31/how-to-test.html). The
+approach is well-established in many languages:
+
+- [cram](https://bitheap.org/cram/) (command-line tests)
+- [ppx_expect](https://github.com/janestreet/ppx_expect) (OCaml)
+- [insta](https://github.com/mitsuhiko/insta) (Rust)
+
+thanks to [@untiaker](https://github.com/untitaker), who found how to expand the
+original doctest solution into an approach that works with standard `assert`
+statements.
