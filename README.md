@@ -11,15 +11,6 @@ documented outputs.
 ## Before
 
 ```python
-def calculate_total(items, tax_rate):
-    """
-    >>> calculate_total([10, 20, 30], 0.1)
-    55
-    """
-    subtotal = sum(items)
-    return subtotal + (subtotal * tax_rate)
-
-
 def test_calculate_total():
     assert calculate_total([10, 20, 30], 0.1) == 55
     assert calculate_total([5, 5], 0.2) == 10
@@ -28,17 +19,6 @@ def test_calculate_total():
 ## After `pytest --accept`
 
 ```diff
-# math_helpers.py
-def calculate_total(items, tax_rate):
-    """
-    >>> calculate_total([10, 20, 30], 0.1)
--    55
-+    66.0
-    """
-    subtotal = sum(items)
-    return subtotal + (subtotal * tax_rate)
-
-# test_math_helpers.py
 def test_calculate_total():
 -    assert calculate_total([10, 20, 30], 0.1) == 55
 -    assert calculate_total([5, 5], 0.2) == 10
@@ -71,13 +51,13 @@ pytest --accept
 ## Why?
 
 - Often it's fairly easy to observe whether something is working by viewing the
-  output it produces.
-- But often output is verbose, and copying and pasting the output into the test
-  is tedious.
-- `pytest-accept` does the copying & pasting for you.
+  output it produces
+- ...but often output is verbose, and copying and pasting the output into the
+  test is tedious
+- `pytest-accept` does the copying & pasting for you
 - Similarly, lots of folks generally find writing any tests a bit annoying, and
   prefer to develop by "running the code and seeing if it works". This library
-  aims to make testing a joyful part of that development loop.
+  aims to make testing a joyful part of that development loop
 
 This style of testing is fairly well-developed in some languages, although still
 doesn't receive the attention I think it deserves, and historically hasn't had
@@ -91,7 +71,7 @@ blog post [How to Test](https://matklad.github.io//2021/05/31/how-to-test.html).
 
 ## How it works
 
-pytest-accept:
+`pytest-accept`:
 
 - Intercepts test failures from both doctests and assert statements
 - Parses the files to understand where the documented values are
@@ -104,23 +84,6 @@ Things to know:
   against literals or simple expressions
 - **Overwrite by default**: Pass `--accept-copy` to write to `.py.new` files
   instead.
-
-## What about more complex assertions?
-
-We currently don't support:
-
-- Assertions that compare against non-literal values (e.g.,
-  `assert result == some_variable`)
-- Comparisons besides `==`
-- Assert statements with messages
-
-For more complex test scenarios, consider:
-
-- [pytest-regtest](https://gitlab.com/uweschmitt/pytest-regtest) for file-based
-  testing
-- [syrupy](https://github.com/tophat/syrupy) for snapshot testing
-- [pytest-insta](https://github.com/vberlier/pytest-insta) for insta-style
-  review
 
 <details>
 <summary>Doctest quirks</summary>
@@ -165,6 +128,14 @@ approach is well-established in many languages:
 - [cram](https://bitheap.org/cram/) (command-line tests)
 - [ppx_expect](https://github.com/janestreet/ppx_expect) (OCaml)
 - [insta](https://github.com/mitsuhiko/insta) (Rust)
+
+For more complex test scenarios, consider:
+
+- [pytest-regtest](https://gitlab.com/uweschmitt/pytest-regtest) for file-based
+  testing
+- [syrupy](https://github.com/tophat/syrupy) for snapshot testing
+- [pytest-insta](https://github.com/vberlier/pytest-insta) for insta-style
+  review
 
 thanks to [@untiaker](https://github.com/untitaker), who found how to expand the
 original doctest solution into an approach that works with standard `assert`
