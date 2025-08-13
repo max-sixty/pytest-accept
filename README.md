@@ -11,19 +11,25 @@ documented outputs.
 ## Before
 
 ```python
-def test_calculate_total():
-    assert calculate_total([10, 20, 30], 0.1) == 55
-    assert calculate_total([5, 5], 0.2) == 10
+import re
+
+
+def extract_functions(code):
+    return re.findall(r"(\w+)\(", code)
+
+
+def test_extract_functions():
+    assert extract_functions("print('hi')") == ["print"]
+    assert extract_functions("sum(map(f, x))") == ["sum"]
 ```
 
 ## After `pytest --accept`
 
 ```diff
-def test_calculate_total():
--    assert calculate_total([10, 20, 30], 0.1) == 55
--    assert calculate_total([5, 5], 0.2) == 10
-+    assert calculate_total([10, 20, 30], 0.1) == 66.0
-+    assert calculate_total([5, 5], 0.2) == 12.0
+def test_extract_functions():
+    assert extract_functions("print('hi')") == ["print"]
+-    assert extract_functions("sum(map(f, x))") == ["sum"]
++    assert extract_functions("sum(map(f, x))") == ["sum", "map"]
 ```
 
 pytest-accept is decoupled from the tests it works with — it can be used with
