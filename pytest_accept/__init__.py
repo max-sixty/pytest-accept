@@ -280,6 +280,9 @@ pytest_addoption = doctest_addoption
 # ===== Plugin Hooks =====
 def pytest_configure(config):
     """Initialize plugin configuration"""
+    if config.pluginmanager.hasplugin("xdist"):
+        config.pluginmanager.register(_DeferXdist())
+
     # Check if private APIs are available when in accept mode
     if config.getoption("--accept") or config.getoption("--accept-copy"):
         try:
@@ -321,33 +324,33 @@ def pytest_configure(config):
         config.stash[file_hashes_key] = file_hashes
 
 
-def pytest_configure_node(node):
-    """xdist hook - send configuration to workers"""
-    # Send file hashes to workers so they can track changes
-    # node.config.stash should always exist in modern pytest
-    if file_hashes_key in node.config.stash:
-        # Convert Path keys to strings for serialization
-        file_hashes = node.config.stash[file_hashes_key]
-        serializable_hashes = {
-            str(path): hash_val for path, hash_val in file_hashes.items()
-        }
-        node.slaveinput["file_hashes"] = serializable_hashes
+class _DeferXdist:
+    def pytest_configure_node(self, node):
+        """xdist hook - send configuration to workers"""
+        # Send file hashes to workers so they can track changes
+        # node.config.stash should always exist in modern pytest
+        if file_hashes_key in node.config.stash:
+            # Convert Path keys to strings for serialization
+            file_hashes = node.config.stash[file_hashes_key]
+            serializable_hashes = {
+                str(path): hash_val for path, hash_val in file_hashes.items()
+            }
+            node.slaveinput["file_hashes"] = serializable_hashes
 
+    def pytest_testnodedown(self, node, error):
+        """xdist hook - collect file changes from finished workers"""
+        # workeroutput may not exist if the worker crashed or didn't report back
+        worker_output = getattr(node, "workeroutput", {})
+        if "file_changes" in worker_output:
+            # node.session is not guaranteed to exist, so use config.stash directly
+            master_changes = node.config.stash.setdefault(file_changes_key, {})
 
-def pytest_testnodedown(node, error):
-    """xdist hook - collect file changes from finished workers"""
-    # workeroutput may not exist if the worker crashed or didn't report back
-    worker_output = getattr(node, "workeroutput", {})
-    if "file_changes" in worker_output:
-        # node.session is not guaranteed to exist, so use config.stash directly
-        master_changes = node.config.stash.setdefault(file_changes_key, {})
-
-        for path_str, serialized_changes in worker_output["file_changes"].items():
-            path = Path(path_str)
-            # Deserialize and add all changes
-            for change_dict in serialized_changes:
-                change = Change.from_dict(change_dict)
-                master_changes.setdefault(path, []).append(change)
+            for path_str, serialized_changes in worker_output["file_changes"].items():
+                path = Path(path_str)
+                # Deserialize and add all changes
+                for change_dict in serialized_changes:
+                    change = Change.from_dict(change_dict)
+                    master_changes.setdefault(path, []).append(change)
 
 
 def pytest_sessionfinish(session, exitstatus):
@@ -442,6 +445,4 @@ __all__ = [
     "pytest_collect_file",
     "pytest_assertrepr_compare",
     "pytest_collection_modifyitems",
-    "pytest_configure_node",
-    "pytest_testnodedown",
 ]
