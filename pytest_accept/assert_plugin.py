@@ -128,7 +128,7 @@ def _patch_assertion_rewriter():
             handlers=[
                 ast.ExceptHandler(
                     expr=AssertionError,
-                    identifier="__pytest_accept_e",
+                    name="__pytest_accept_e",
                     body=_ASSERTION_HANDLER,
                 )
             ],
