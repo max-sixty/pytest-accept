@@ -38,6 +38,11 @@ logger = logging.getLogger(__name__)
 file_changes_key = pytest.StashKey[Any]()
 file_hashes_key = pytest.StashKey[dict[Path, int]]()
 
+# ===== xdist communication keys =====
+# These are used as dictionary keys in slaveinput/workeroutput for xdist communication
+XDIST_FILE_CHANGES_KEY = "file_changes"
+XDIST_FILE_HASHES_KEY = "file_hashes"
+
 # StashKeys for assertion tracking
 recent_failure_key = pytest.StashKey[list[tuple]]()
 
@@ -312,42 +317,50 @@ def pytest_configure(config):
 
     # This hook runs on both master and workers, so we need to check
     # if we're a worker by looking for slaveinput (only exists on workers)
-    if hasattr(config, "slaveinput") and "file_hashes" in config.slaveinput:
+    if hasattr(config, "slaveinput") and XDIST_FILE_HASHES_KEY in config.slaveinput:
         # Convert string keys back to Path objects
-        serialized_hashes = config.slaveinput["file_hashes"]
+        serialized_hashes = config.slaveinput[XDIST_FILE_HASHES_KEY]
         file_hashes = {
             Path(path_str): hash_val for path_str, hash_val in serialized_hashes.items()
         }
         config.stash[file_hashes_key] = file_hashes
 
-
-def pytest_configure_node(node):
-    """xdist hook - send configuration to workers"""
-    # Send file hashes to workers so they can track changes
-    # node.config.stash should always exist in modern pytest
-    if file_hashes_key in node.config.stash:
-        # Convert Path keys to strings for serialization
-        file_hashes = node.config.stash[file_hashes_key]
-        serializable_hashes = {
-            str(path): hash_val for path, hash_val in file_hashes.items()
-        }
-        node.slaveinput["file_hashes"] = serializable_hashes
+    # Register xdist hooks only if xdist is available
+    if config.pluginmanager.hasplugin("xdist"):
+        config.pluginmanager.register(XDistHooks())
 
 
-def pytest_testnodedown(node, error):
-    """xdist hook - collect file changes from finished workers"""
-    # workeroutput may not exist if the worker crashed or didn't report back
-    worker_output = getattr(node, "workeroutput", {})
-    if "file_changes" in worker_output:
-        # node.session is not guaranteed to exist, so use config.stash directly
-        master_changes = node.config.stash.setdefault(file_changes_key, {})
+class XDistHooks:
+    """Container for xdist-specific hooks that are conditionally registered"""
 
-        for path_str, serialized_changes in worker_output["file_changes"].items():
-            path = Path(path_str)
-            # Deserialize and add all changes
-            for change_dict in serialized_changes:
-                change = Change.from_dict(change_dict)
-                master_changes.setdefault(path, []).append(change)
+    def pytest_configure_node(self, node):
+        """xdist hook - send configuration to workers"""
+        # Send file hashes to workers so they can track changes
+        # node.config.stash should always exist in modern pytest
+        if file_hashes_key in node.config.stash:
+            # Convert Path keys to strings for serialization
+            file_hashes = node.config.stash[file_hashes_key]
+            serializable_hashes = {
+                str(path): hash_val for path, hash_val in file_hashes.items()
+            }
+            node.slaveinput[XDIST_FILE_HASHES_KEY] = serializable_hashes
+
+    def pytest_testnodedown(self, node, error):
+        """xdist hook - collect file changes from finished workers"""
+        # workeroutput may not exist if the worker crashed or didn't report back
+        worker_output = getattr(node, "workeroutput", {})
+        if XDIST_FILE_CHANGES_KEY in worker_output:
+            # node.session is not guaranteed to exist, so use config.stash directly
+            master_changes = node.config.stash.setdefault(file_changes_key, {})
+
+            for path_str, serialized_changes in worker_output[
+                XDIST_FILE_CHANGES_KEY
+            ].items():
+                path = Path(path_str)
+                # Deserialize and add all changes
+                for change_dict in serialized_changes:
+                    change = Change.from_dict(change_dict)
+                    master_changes.setdefault(path, []).append(change)
 
 
 def pytest_sessionfinish(session, exitstatus):
@@ -370,7 +383,7 @@ def pytest_sessionfinish(session, exitstatus):
                 serializable_changes[str(path)] = [
                     change.to_dict() for change in changes
                 ]
-            session.config.workeroutput["file_changes"] = serializable_changes
+            session.config.workeroutput[XDIST_FILE_CHANGES_KEY] = serializable_changes
         return
 
     # We're the master (or running without xdist) - write all changes
@@ -442,6 +455,4 @@ __all__ = [
     "pytest_collect_file",
     "pytest_assertrepr_compare",
     "pytest_collection_modifyitems",
-    "pytest_configure_node",
-    "pytest_testnodedown",
 ]

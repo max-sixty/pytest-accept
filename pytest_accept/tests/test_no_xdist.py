@@ -7,13 +7,7 @@ pytest_testnodedown) but xdist isn't installed, pytest fails with a
 PluginValidationError.
 """
 
-import pytest
 
-
-@pytest.mark.xfail(
-    reason="Currently fails with PluginValidationError when xdist is disabled. "
-    "This will be fixed by PR #255 which defers xdist hook registration."
-)
 def test_plugin_works_without_xdist(pytester):
     """Test that pytest-accept works when xdist is not available.
 
