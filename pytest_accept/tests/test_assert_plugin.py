@@ -11,6 +11,29 @@ def test_basic(pytester):
         assert f.read() == test_contents.replace("1 == 3", "1 == 1")
 
 
+def test_neq(pytester):
+    test_contents = "def test_x():\n    assert 1 != 1\n"
+    path = pytester.makepyfile(test_contents)
+    result = pytester.runpytest("--accept-copy")
+    result.assert_outcomes(failed=1)
+    assert "FAILED test_neq.py::test_x - assert 1 != 1" in result.outlines
+
+    assert not os.path.exists(str(path) + ".new")
+
+
+def test_exception(pytester):
+    test_contents = "def test_x():\n    assert [][1] == 0\n"
+    path = pytester.makepyfile(test_contents)
+    result = pytester.runpytest("--accept-copy")
+    result.assert_outcomes(failed=1)
+    assert (
+        "FAILED test_exception.py::test_x - IndexError: list index out of range"
+        in result.outlines
+    )
+
+    assert not os.path.exists(str(path) + ".new")
+
+
 def test_too_complex(pytester):
     test_contents = "import random\ndef test_x():\n    assert 10 == random.random()\n"
     path = pytester.makepyfile(test_contents)

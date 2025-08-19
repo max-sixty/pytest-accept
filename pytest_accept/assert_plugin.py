@@ -158,7 +158,14 @@ def __handle_failed_assertion():
         # Walking up stack frames is inherently uncertain - check if item has session
         if "item" in frame_locals and hasattr(frame_locals["item"], "session"):
             session = frame_locals["item"].session
-            __handle_failed_assertion_impl(raw_excinfo, session)
+            recent_failure = session.config.stash.setdefault(recent_failure_key, [])
+            if not recent_failure:
+                continue
+            op, left, _ = recent_failure.pop()
+            if op != "==":
+                logger.debug("does not assert equality, and won't be replaced")
+                continue
+            __handle_failed_assertion_impl(raw_excinfo, session, left)
             # If we're here, we're in accept mode (otherwise the rewriter wouldn't be patched)
             return
 
@@ -166,18 +173,8 @@ def __handle_failed_assertion():
     raise
 
 
-def __handle_failed_assertion_impl(raw_excinfo, session):
+def __handle_failed_assertion_impl(raw_excinfo, session, left):
     excinfo = ExceptionInfo.from_exc_info(raw_excinfo)
-
-    recent_failure = session.config.stash.setdefault(recent_failure_key, [])
-    if not recent_failure:
-        return
-
-    op, left, _ = recent_failure.pop()
-    if op != "==":
-        logger.debug("does not assert equality, and won't be replaced")
-        return
-
     tb_entry = excinfo.traceback[0]
     # not exactly sure why +1, but in tb_entry.__repr__
     line_number_start = tb_entry.lineno + 1
