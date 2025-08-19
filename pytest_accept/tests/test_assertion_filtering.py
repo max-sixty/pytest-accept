@@ -34,7 +34,7 @@ def test_operators():
     path = pytester.makepyfile(test_contents)
 
     result = pytester.runpytest("--accept-copy")
-    result.assert_outcomes(passed=1)
+    result.assert_outcomes(failed=1)
 
     new_path = path.parent / (path.name + ".new")
     assert new_path.exists()
