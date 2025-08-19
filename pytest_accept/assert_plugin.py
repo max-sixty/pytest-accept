@@ -123,11 +123,14 @@ def _patch_assertion_rewriter():
             # Return original without wrapping to avoid "too many nested blocks"
             return rv
 
+        exception_type = ast.Name(id="AssertionError", ctx=ast.Load())
+        ast.copy_location(exception_type, assert_)
+
         try_except = ast.Try(
             body=rv,
             handlers=[
                 ast.ExceptHandler(
-                    expr=AssertionError,
+                    type=exception_type,
                     name="__pytest_accept_e",
                     body=_ASSERTION_HANDLER,
                 )
