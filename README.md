@@ -55,8 +55,8 @@ pytest --accept
 
 - Often it's fairly easy to observe whether something is working by viewing the
   output it produces
-- ...but often output is verbose, and copying and pasting the output into the
-  test is tedious
+- ...but often the output is verbose, and copying and pasting the output into
+  the test is tedious
 - `pytest-accept` does the copying & pasting for you
 - Similarly, lots of folks generally find writing any tests a bit annoying, and
   prefer to develop by "running the code and seeing if it works". This library
