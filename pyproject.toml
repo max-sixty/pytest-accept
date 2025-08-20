@@ -17,7 +17,7 @@ accept = "pytest_accept"
 [tool.pytest.ini_options]
 addopts = ["--strict-config", "--strict-markers", "--doctest-modules"]
 doctest_optionflags = "NORMALIZE_WHITESPACE IGNORE_EXCEPTION_DETAIL ELLIPSIS"
-filterwarnings = ["error:::pytest_accept.*"]
+filterwarnings = ["error"]
 pytester_example_dir = "examples"
 testpaths = ["pytest_accept"]
 
