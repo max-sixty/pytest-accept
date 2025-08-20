@@ -11,9 +11,6 @@ documented outputs.
 ## Before
 
 ```python
-import re
-
-
 def extract_functions(code):
     return re.findall(r"(\w+)\(", code)
 
@@ -28,8 +25,8 @@ def test_extract_functions():
 ```diff
 def test_extract_functions():
     assert extract_functions("print('hi')") == ["print"]
--    assert extract_functions("sum(map(f, x))") == ["sum"]
-+    assert extract_functions("sum(map(f, x))") == ["sum", "map"]
+-   assert extract_functions("sum(map(f, x))") == ["sum"]
++   assert extract_functions("sum(map(f, x))") == ["sum", "map"]
 ```
 
 pytest-accept is decoupled from the tests it works with — it can be used with
