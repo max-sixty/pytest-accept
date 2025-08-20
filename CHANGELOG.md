@@ -1,6 +1,6 @@
 # Changelog
 
-## [0.2.2] - 2025-01-19
+## [0.2.2] - 2025-08-19
 
 ### Fixed
 
@@ -11,14 +11,14 @@
 - Fixed compatibility with environments that don't have pytest-xdist installed
   (#259)
 
-## [0.2.1] - 2024-11-17
+## [0.2.1] - 2025-08-13
 
 ### Fixed
 
 - Re-release of 0.2.0 to fix PyPI publishing workflow issue
 - No functional changes from 0.2.0
 
-## [0.2.0] - 2024-11-17
+## [0.2.0] - 2025-08-04
 
 ### Added
 
