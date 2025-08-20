@@ -11,9 +11,6 @@ documented outputs.
 ## Before
 
 ```python
-import re
-
-
 def extract_functions(code):
     return re.findall(r"(\w+)\(", code)
 
@@ -28,8 +25,8 @@ def test_extract_functions():
 ```diff
 def test_extract_functions():
     assert extract_functions("print('hi')") == ["print"]
--    assert extract_functions("sum(map(f, x))") == ["sum"]
-+    assert extract_functions("sum(map(f, x))") == ["sum", "map"]
+-   assert extract_functions("sum(map(f, x))") == ["sum"]
++   assert extract_functions("sum(map(f, x))") == ["sum", "map"]
 ```
 
 pytest-accept is decoupled from the tests it works with — it can be used with
@@ -58,8 +55,8 @@ pytest --accept
 
 - Often it's fairly easy to observe whether something is working by viewing the
   output it produces
-- ...but often output is verbose, and copying and pasting the output into the
-  test is tedious
+- ...but often the output is verbose, and copying and pasting the output into
+  the test is tedious
 - `pytest-accept` does the copying & pasting for you
 - Similarly, lots of folks generally find writing any tests a bit annoying, and
   prefer to develop by "running the code and seeing if it works". This library
