@@ -111,7 +111,7 @@ def _patch_assertion_rewriter():
 
         # Add simple safety check - if there are too many AST nodes, skip wrapping
         # This prevents "too many statically nested blocks" errors in edge cases
-        total_nodes = sum(1 for _ in ast.walk(ast.Module(body=rv)))
+        total_nodes = sum(1 for _ in ast.walk(ast.Module(body=rv, type_ignores=[])))
         if total_nodes > 200:  # Higher threshold - only skip for very complex cases
             # module_path is an internal pytest attribute that may not exist in all versions
             if hasattr(self, "module_path"):
@@ -145,7 +145,7 @@ def _patch_assertion_rewriter():
 
         return [try_except]
 
-    AssertionRewriter.visit_Assert = new_visit_assert
+    AssertionRewriter.visit_Assert = new_visit_assert  # type: ignore[method-assign]
 
 
 def __handle_failed_assertion():
@@ -184,7 +184,7 @@ def __handle_failed_assertion_impl(raw_excinfo, session, left):
     line_number_end = line_number_start + len(tb_entry.statement.lines) - 1
     original_location = slice(line_number_start, line_number_end)
 
-    path = tb_entry.path
+    path = Path(tb_entry.path)
     with path.open() as f:
         tree = ast.parse(f.read())
 
@@ -192,18 +192,21 @@ def __handle_failed_assertion_impl(raw_excinfo, session, left):
         if isinstance(item, ast.Assert) and original_location.start == item.lineno:
             # we need to _then_ check that the next compare item's
             # ops[0] is Eq and then replace the comparator[0]
+            test = item.test
+            if not isinstance(test, ast.Compare):
+                continue
             try:
                 assert item.msg is None
-                assert len(item.test.comparators) == 1
-                assert len(item.test.ops) == 1
-                assert isinstance(item.test.ops[0], ast.Eq)
+                assert len(test.comparators) == 1
+                assert len(test.ops) == 1
+                assert isinstance(test.ops[0], ast.Eq)
 
-                ast.literal_eval(item.test.comparators[0])
+                ast.literal_eval(test.comparators[0])
             except Exception:
                 continue
 
             new_assert = copy.copy(item)
-            new_assert.test.comparators[0] = ast.Constant(value=left)
+            test.comparators[0] = ast.Constant(value=left)
 
             # Submit change to unified change collection
             file_changes = session.stash.setdefault(file_changes_key, {})
