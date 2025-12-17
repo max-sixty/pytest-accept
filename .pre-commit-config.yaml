@@ -9,10 +9,11 @@ repos:
     hooks:
       - id: ty
         name: ty
-        entry: ty check --python .venv
-        language: system
+        entry: ty check --ignore unresolved-import
+        language: python
         types: [python]
         pass_filenames: false
+        additional_dependencies: ["ty"]
   - repo: https://github.com/keewis/blackdoc
     rev: v0.4.6
     hooks:
