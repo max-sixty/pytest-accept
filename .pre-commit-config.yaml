@@ -14,10 +14,6 @@ repos:
         types: [python]
         pass_filenames: false
         additional_dependencies: ["ty"]
-  - repo: https://github.com/keewis/blackdoc
-    rev: v0.4.6
-    hooks:
-      - id: blackdoc
   # This doesn't seem to work from pre-commit.ci; which may not have internet access
   # - repo: https://github.com/ComPWA/mirrors-markdown-link-check
   #   rev: v3.8.7
