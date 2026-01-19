@@ -1,0 +1,5 @@
+ci:
+  # Disable auto-fixes because pre-commit.ci's blackdoc disagrees with
+  # GitHub Actions' blackdoc on formatting. Both use v0.4.6 but get
+  # different results, likely due to different black versions.
+  autofix_prs: false
