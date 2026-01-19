@@ -3,3 +3,7 @@ ci:
   # GitHub Actions' blackdoc on formatting. Both use v0.4.6 but get
   # different results, likely due to different black versions.
   autofix_prs: false
+  autofix_commit_msg: ""
+  # Skip blackdoc in pre-commit.ci since it conflicts with GH Actions
+  skip:
+    - blackdoc
