@@ -47,3 +47,7 @@ select = [
   "I",   # isort
   "UP",  # Pyupgrade
 ]
+
+[tool.black]
+line-length = 88
+target-version = ["py39"]
