@@ -98,11 +98,13 @@ def _to_doctest_format(output: str) -> str:
     Convert a string into a doctest format.
 
     For example, this requires `<BLANKLINE>`s:
-    >>> print('''
+    >>> print(
+    ...     '''
     ... hello
     ...
     ... world
-    ... ''')
+    ... '''
+    ... )
     <BLANKLINE>
     hello
     <BLANKLINE>
@@ -110,11 +112,13 @@ def _to_doctest_format(output: str) -> str:
 
     Here, we have a doctest confirming this behavior (but we have to add a prefix, or
     it'll treat it as an actual blank line! Maybe this is pushing doctests too far!):
-    >>> for line in _to_doctest_format('''
+    >>> for line in _to_doctest_format(
+    ...     '''
     ... hello
     ...
     ... world
-    ... ''').splitlines():
+    ... '''
+    ... ).splitlines():
     ...     print(f"# {line}")
     # <BLANKLINE>
     # hello
