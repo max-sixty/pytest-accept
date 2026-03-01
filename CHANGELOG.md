@@ -1,5 +1,19 @@
 # Changelog
 
+## [0.2.3] - 2026-02-28
+
+### Fixed
+
+- Fixed doctest output indentation: now derives indentation from the `>>>` line
+  rather than the output position, fixing cases where blank lines in docstrings
+  caused output to be written at column 0 (#297) — thanks to @VeckoTheGecko for
+  reporting (#296)
+- Fixed Python 3.13 deprecation warning in assert plugin (#264)
+
+### Changed
+
+- Migrated type checking from mypy to ty (#283)
+
 ## [0.2.2] - 2025-08-19
 
 ### Fixed
