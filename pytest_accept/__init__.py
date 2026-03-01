@@ -237,8 +237,10 @@ def _apply_doctest_changes(
     result.extend(original[:next_start_line])
 
     for current, next_failure in zip_longest(failures, failures[1:]):
-        # Get the existing indentation from the source line
-        match = re.match(r"\s*", original[next_start_line])
+        # Get indentation from the >>> source line of the current example,
+        # not from next_start_line which may be an empty line (issue #296)
+        source_line_idx = current.test.lineno + current.example.lineno
+        match = re.match(r"\s*", original[source_line_idx])
         existing_indent = match.group() if match else ""
         snapshot_result = _to_doctest_format(current.got)
         indented = textwrap.indent(snapshot_result, prefix=existing_indent)
