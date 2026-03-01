@@ -1,10 +1,10 @@
 # @max-sixty's standard set
 repos:
   - repo: https://github.com/astral-sh/ruff-pre-commit
-    rev: v0.14.9
+    rev: v0.15.2
     hooks:
       - id: ruff-format
-      - id: ruff
+      - id: ruff-check
   - repo: local
     hooks:
       - id: ty
@@ -14,10 +14,6 @@ repos:
         types: [python]
         pass_filenames: false
         additional_dependencies: ["ty"]
-  - repo: https://github.com/keewis/blackdoc
-    rev: v0.4.6
-    hooks:
-      - id: blackdoc
   # This doesn't seem to work from pre-commit.ci; which may not have internet access
   # - repo: https://github.com/ComPWA/mirrors-markdown-link-check
   #   rev: v3.8.7
@@ -33,7 +29,7 @@ repos:
       - id: debug-statements
       - id: mixed-line-ending
   - repo: https://github.com/rbubley/mirrors-prettier
-    rev: v3.7.4
+    rev: v3.8.1
     hooks:
       - id: prettier
         additional_dependencies:

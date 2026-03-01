@@ -9,7 +9,7 @@ name = "pytest-accept"
 urls = { homepage = "https://github.com/max-sixty/pytest-accept", repository = "https://github.com/max-sixty/pytest-accept" }
 
 [dependency-groups]
-dev = ["blackdoc", "pre-commit", "pytest-xdist>=3.8.0", "ruff", "ty"]
+dev = ["pre-commit", "pytest-xdist>=3.8.0", "ruff", "ty"]
 
 [project.entry-points.pytest11]
 accept = "pytest_accept"
@@ -32,6 +32,9 @@ module-root = ""
 
 [tool.ruff]
 fix = true
+
+[tool.ruff.format]
+docstring-code-format = true
 
 [tool.ruff.lint]
 ignore = [

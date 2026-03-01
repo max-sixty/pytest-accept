@@ -14,7 +14,6 @@ def add_example():
     >>> pytester = getfixture("pytester")
     >>> if sys.platform == "win32":
     ...     pytest.skip("Paths differ on windows")
-    ...
     >>> pytester.copy_example("add.py")
     PosixPath('.../pytest_accept.tests.test_doctest.add_example0/add.py')
 
@@ -55,7 +54,6 @@ def add_example():
     (For some reason we need to delete the pyc file, TODO: work out why upstream
     >>> for f in pytester.path.glob(r"**/*.pyc"):
     ...     f.unlink()
-    ...
 
     >>> result = pytester.runpytest("--doctest-modules", "--accept")
     =====...==== test session starts ====...====
@@ -86,7 +84,6 @@ def no_overwrite_example():
 
     >>> if sys.platform == "win32":
     ...     pytest.skip("Paths differ on windows")
-    ...
     >>> path = pytester.copy_example("add.py")
 
     Collect the tests, to simulate starting the tests:
