@@ -1,5 +1,11 @@
 # Changelog
 
+## [0.2.4] - 2026-06-11
+
+### Fixed
+
+- Include the LICENSE file in sdists and wheels (#310) - @isuruf
+
 ## [0.2.3] - 2026-02-28
 
 ### Fixed
