@@ -4,8 +4,9 @@ from __future__ import annotations
 
 import os
 import tempfile
+from collections.abc import Callable
 from pathlib import Path
-from typing import Any, Callable
+from typing import Any
 
 from . import file_hashes_key
 
