@@ -1,7 +1,7 @@
 # @max-sixty's standard set
 repos:
   - repo: https://github.com/astral-sh/ruff-pre-commit
-    rev: v0.16.7
+    rev: v0.16.8
     hooks:
       - id: ruff-format
       - id: ruff-check
@@ -29,12 +29,12 @@ repos:
       - id: debug-statements
       - id: mixed-line-ending
   - repo: https://github.com/rbubley/mirrors-prettier
-    rev: v3.9.6
+    rev: v3.9.8
     hooks:
       - id: prettier
         additional_dependencies:
           - prettier
   - repo: https://github.com/crate-ci/typos
-    rev: v1
+    rev: v1.50.2
     hooks:
       - id: typos
