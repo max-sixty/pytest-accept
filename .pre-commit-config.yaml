@@ -1,7 +1,7 @@
 # @max-sixty's standard set
 repos:
   - repo: https://github.com/astral-sh/ruff-pre-commit
-    rev: v0.17.3
+    rev: v0.17.4
     hooks:
       - id: ruff-format
       - id: ruff-check
@@ -9,11 +9,11 @@ repos:
     hooks:
       - id: ty
         name: ty
-        entry: ty check --ignore unresolved-import
+        entry: ty check --ignore import-not-found
         language: python
         types: [python]
         pass_filenames: false
-        additional_dependencies: ["ty"]
+        additional_dependencies: ["ty==0.0.100"]
   # This doesn't seem to work from pre-commit.ci; which may not have internet access
   # - repo: https://github.com/ComPWA/mirrors-markdown-link-check
   #   rev: v3.8.7
@@ -35,6 +35,6 @@ repos:
         additional_dependencies:
           - prettier
   - repo: https://github.com/crate-ci/typos
-    rev: v1.51.1
+    rev: v1.52.0
     hooks:
       - id: typos
