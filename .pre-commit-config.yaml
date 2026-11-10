@@ -13,7 +13,7 @@ repos:
         language: python
         types: [python]
         pass_filenames: false
-        additional_dependencies: ["ty"]
+        additional_dependencies: ["ty==0.0.100"]
   # This doesn't seem to work from pre-commit.ci; which may not have internet access
   # - repo: https://github.com/ComPWA/mirrors-markdown-link-check
   #   rev: v3.8.7
